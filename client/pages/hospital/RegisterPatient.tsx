@@ -510,8 +510,8 @@ export default function RegisterPatient() {
                         </SelectTrigger>
                         <SelectContent>
                           {urgencyLevels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
