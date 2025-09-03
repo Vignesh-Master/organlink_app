@@ -181,6 +181,78 @@ export class OCRService {
     return '0x' + hash.digest('hex');
   }
 
+  async advancedSignatureVerification(imageBuffer: Buffer, expectedName?: string): Promise<{
+    isValid: boolean;
+    extractedText: string;
+    confidence: number;
+    matchedPatterns: string[];
+    nameMatch: boolean;
+  }> {
+    try {
+      const ocrResult = await this.processImage(imageBuffer);
+      const extractedText = ocrResult.text;
+      const confidence = ocrResult.confidence;
+
+      // Check for name match if expected name is provided
+      let nameMatch = false;
+      if (expectedName && extractedText) {
+        const similarity = this.calculateTextSimilarity(
+          extractedText.toLowerCase().replace(/[^a-z\s]/g, ''),
+          expectedName.toLowerCase().replace(/[^a-z\s]/g, '')
+        );
+        nameMatch = similarity > 0.6; // 60% similarity threshold
+      }
+
+      // Look for signature-like patterns
+      const matchedPatterns: string[] = [];
+      const text = extractedText.toLowerCase();
+
+      // Pattern 1: Contains name-like words
+      if (/[a-z]{2,}\s+[a-z]{2,}/.test(text)) {
+        matchedPatterns.push('name_pattern');
+      }
+
+      // Pattern 2: Has signature-like length (not too long)
+      if (extractedText.length > 2 && extractedText.length < 100) {
+        matchedPatterns.push('length_appropriate');
+      }
+
+      // Pattern 3: Contains alphabetic characters
+      if (/[a-zA-Z]{3,}/.test(extractedText)) {
+        matchedPatterns.push('contains_letters');
+      }
+
+      // Pattern 4: Not too much text (signatures are usually short)
+      const wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
+      if (wordCount >= 1 && wordCount <= 6) {
+        matchedPatterns.push('word_count_reasonable');
+      }
+
+      // Determine if valid based on confidence, patterns, and name match
+      const isValid = (
+        confidence > 0.3 &&
+        matchedPatterns.length >= 2
+      ) || nameMatch;
+
+      return {
+        isValid,
+        extractedText,
+        confidence,
+        matchedPatterns,
+        nameMatch
+      };
+    } catch (error) {
+      console.error('Advanced signature verification error:', error);
+      return {
+        isValid: false,
+        extractedText: '',
+        confidence: 0,
+        matchedPatterns: [],
+        nameMatch: false
+      };
+    }
+  }
+
   async cleanup(): Promise<void> {
     if (this.worker) {
       await this.worker.terminate();
