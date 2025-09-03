@@ -188,14 +188,23 @@ router.patch("/:patient_id/status", authenticateHospital, async (req, res) => {
   try {
     const hospital_id = req.hospital?.hospital_id;
     const { patient_id } = req.params;
-    const { is_active } = req.body;
+    const { status } = req.body;
+
+    // Validate status value
+    const validStatuses = ['active', 'matched', 'completed', 'inactive'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      });
+    }
 
     const result = await pool.query(
-      `UPDATE patients 
-       SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+      `UPDATE patients
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE patient_id = $2 AND hospital_id = $3
        RETURNING *`,
-      [is_active, patient_id, hospital_id],
+      [status || 'active', patient_id, hospital_id],
     );
 
     if (result.rows.length === 0) {
