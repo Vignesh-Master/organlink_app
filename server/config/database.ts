@@ -2,7 +2,7 @@ import { Pool } from "pg";
 
 const connectionString =
   process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_gV6OIzYPR0Jh@ep-quiet-thunder-adtsc7t7-pooler.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require";
+  "postgresql://neondb_owner:npg_zoE2TNXip4dV@ep-soft-bush-adgmneyu-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 export const pool = new Pool({
   connectionString,

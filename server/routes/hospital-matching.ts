@@ -2,7 +2,11 @@ import express from "express";
 import { pool } from "../config/database.js";
 import { authenticateHospital } from "../middleware/auth.js";
 import { aiMatchingService } from "../services/aiMatching.js";
-import { findEnhancedMatches, predictTransplantSuccess, generateMatchingInsights } from "../services/enhancedAiMatching";
+import {
+  findEnhancedMatches,
+  predictTransplantSuccess,
+  generateMatchingInsights,
+} from "../services/enhancedAiMatching";
 import NotificationService from "../services/notificationService";
 
 const router = express.Router();
@@ -135,7 +139,7 @@ router.get("/incoming-matches", authenticateHospital, async (req, res) => {
        FROM notifications n
        LEFT JOIN matching_requests mr ON n.related_id = mr.request_id
        LEFT JOIN hospital_credentials h ON mr.requesting_hospital_id = h.hospital_id
-       WHERE n.hospital_id = $1 AND n.type = 'organ_match' AND n.is_read = false
+       WHERE n.hospital_id = $1 AND n.type = 'organ_match' AND n.read = false
        ORDER BY n.created_at DESC`,
       [hospital_id],
     );
@@ -213,7 +217,7 @@ router.post("/respond", authenticateHospital, async (req, res) => {
 
     // Mark the original notification as read
     await pool.query(
-      "UPDATE notifications SET is_read = true WHERE related_id = $1 AND hospital_id = $2",
+      "UPDATE notifications SET read = true WHERE related_id = $1 AND hospital_id = $2",
       [request_id, hospital_id],
     );
 

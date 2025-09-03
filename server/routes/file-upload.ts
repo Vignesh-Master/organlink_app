@@ -63,10 +63,12 @@ router.post(
           const table = record_type === "patient" ? "patients" : "donors";
           const idCol = record_type === "patient" ? "patient_id" : "donor_id";
           const { rows } = await pool.query(
-            `SELECT full_name FROM ${table} WHERE ${idCol} = $1 AND hospital_id = $2`,
+            `SELECT first_name, last_name FROM ${table} WHERE ${idCol} = $1 AND hospital_id = $2`,
             [record_id, hospital_id],
           );
-          expectedName = rows[0]?.full_name || undefined;
+          if (rows.length > 0) {
+            expectedName = `${rows[0].first_name} ${rows[0].last_name}`.trim();
+          }
         }
       } catch (e) {
         console.warn("Unable to fetch name for OCR verification", e);
@@ -220,15 +222,15 @@ router.post("/blockchain-register", authenticateHospital, async (req, res) => {
     // Update record with tx hash and verification flag
     if (record_type === "patient") {
       await pool.query(
-        `UPDATE patients SET blockchain_tx_hash = $1, signature_verified = $2, updated_at = CURRENT_TIMESTAMP
-         WHERE patient_id = $3 AND hospital_id = $4`,
-        [blockchainTxHash, isVerified, record_id, hospital_id],
+        `UPDATE patients SET verification_tx_hash = $1, ocr_verified = $2, blockchain_verified = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE patient_id = $4 AND hospital_id = $5`,
+        [blockchainTxHash, isVerified, true, record_id, hospital_id],
       );
     } else if (record_type === "donor") {
       await pool.query(
-        `UPDATE donors SET blockchain_tx_hash = $1, signature_verified = $2, updated_at = CURRENT_TIMESTAMP
-         WHERE donor_id = $3 AND hospital_id = $4`,
-        [blockchainTxHash, isVerified, record_id, hospital_id],
+        `UPDATE donors SET verification_tx_hash = $1, ocr_verified = $2, blockchain_verified = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE donor_id = $4 AND hospital_id = $5`,
+        [blockchainTxHash, isVerified, true, record_id, hospital_id],
       );
     }
 
@@ -239,12 +241,10 @@ router.post("/blockchain-register", authenticateHospital, async (req, res) => {
     });
   } catch (error: any) {
     console.error("Blockchain registration error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: error.message || "Failed to register on blockchain",
-      });
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to register on blockchain",
+    });
   }
 });
 

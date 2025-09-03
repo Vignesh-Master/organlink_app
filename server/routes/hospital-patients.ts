@@ -78,21 +78,40 @@ router.post("/register", authenticateHospital, async (req, res) => {
       emergency_phone,
     } = req.body;
 
+    // Validate required fields
+    if (!full_name || !age || !gender || !blood_type || !organ_needed) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Missing required fields: full_name, age, gender, blood_type, and organ_needed are required",
+      });
+    }
+
+    // Split full_name into first_name and last_name
+    const nameParts = full_name.trim().split(" ");
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
+
+    // Calculate approximate date_of_birth from age
+    const currentDate = new Date();
+    const birthYear = currentDate.getFullYear() - parseInt(age.toString());
+    const date_of_birth = `${birthYear}-01-01`; // Use January 1st as default
+
     // Generate unique patient ID
     const patient_id = `PAT_${hospital_id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
     const result = await pool.query(
       `INSERT INTO patients (
-        patient_id, hospital_id, full_name, age, gender, blood_type, 
-        organ_needed, urgency_level, medical_condition, contact_phone, 
-        contact_email, emergency_contact, emergency_phone
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        patient_id, hospital_id, first_name, last_name, date_of_birth, gender, blood_type,
+        organ_needed, urgency_level, medical_condition, phone, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *`,
       [
         patient_id,
         hospital_id,
-        full_name,
-        age,
+        first_name,
+        last_name,
+        date_of_birth,
         gender,
         blood_type,
         organ_needed,
@@ -100,8 +119,6 @@ router.post("/register", authenticateHospital, async (req, res) => {
         medical_condition,
         contact_phone,
         contact_email,
-        emergency_contact,
-        emergency_phone,
       ],
     );
 
@@ -114,7 +131,7 @@ router.post("/register", authenticateHospital, async (req, res) => {
     console.error("Error registering patient:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to register patient",
+      error: `Failed to register patient: ${error.message}`,
     });
   }
 });
@@ -127,18 +144,23 @@ router.post(
     try {
       const hospital_id = req.hospital?.hospital_id;
       const { patient_id } = req.params;
-      const { signature_ipfs_hash, blockchain_tx_hash, signature_verified } =
-        req.body;
+      const {
+        signature_ipfs_hash,
+        verification_tx_hash,
+        ocr_verified,
+        blockchain_verified,
+      } = req.body;
 
       const result = await pool.query(
         `UPDATE patients
-       SET signature_ipfs_hash = $1, blockchain_tx_hash = $2, signature_verified = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE patient_id = $4 AND hospital_id = $5
+       SET signature_ipfs_hash = $1, verification_tx_hash = $2, ocr_verified = $3, blockchain_verified = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE patient_id = $5 AND hospital_id = $6
        RETURNING *`,
         [
           signature_ipfs_hash,
-          blockchain_tx_hash || null,
-          signature_verified || false,
+          verification_tx_hash || null,
+          ocr_verified || false,
+          blockchain_verified || false,
           patient_id,
           hospital_id,
         ],
@@ -171,14 +193,23 @@ router.patch("/:patient_id/status", authenticateHospital, async (req, res) => {
   try {
     const hospital_id = req.hospital?.hospital_id;
     const { patient_id } = req.params;
-    const { is_active } = req.body;
+    const { status } = req.body;
+
+    // Validate status value
+    const validStatuses = ["active", "matched", "completed", "inactive"];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
 
     const result = await pool.query(
-      `UPDATE patients 
-       SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+      `UPDATE patients
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE patient_id = $2 AND hospital_id = $3
        RETURNING *`,
-      [is_active, patient_id, hospital_id],
+      [status || "active", patient_id, hospital_id],
     );
 
     if (result.rows.length === 0) {
@@ -252,6 +283,19 @@ router.put("/:patient_id", authenticateHospital, async (req, res) => {
       emergency_phone,
     } = req.body;
 
+    // Split full_name into first_name and last_name
+    const nameParts = full_name ? full_name.trim().split(" ") : ["", ""];
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
+
+    // Calculate approximate date_of_birth from age if provided
+    let date_of_birth = null;
+    if (age) {
+      const currentDate = new Date();
+      const birthYear = currentDate.getFullYear() - parseInt(age.toString());
+      date_of_birth = `${birthYear}-01-01`;
+    }
+
     // Verify patient belongs to this hospital
     const patientCheck = await pool.query(
       "SELECT patient_id FROM patients WHERE patient_id = $1 AND hospital_id = $2",
@@ -267,15 +311,15 @@ router.put("/:patient_id", authenticateHospital, async (req, res) => {
 
     const result = await pool.query(
       `UPDATE patients SET
-        full_name = $1, age = $2, gender = $3, blood_type = $4,
-        organ_needed = $5, urgency_level = $6, medical_condition = $7,
-        contact_phone = $8, contact_email = $9, emergency_contact = $10,
-        emergency_phone = $11, updated_at = CURRENT_TIMESTAMP
-      WHERE patient_id = $12 AND hospital_id = $13
+        first_name = $1, last_name = $2, date_of_birth = COALESCE($3, date_of_birth), gender = $4, blood_type = $5,
+        organ_needed = $6, urgency_level = $7, medical_condition = $8,
+        phone = $9, email = $10, updated_at = CURRENT_TIMESTAMP
+      WHERE patient_id = $11 AND hospital_id = $12
       RETURNING *`,
       [
-        full_name,
-        age,
+        first_name,
+        last_name,
+        date_of_birth,
         gender,
         blood_type,
         organ_needed,
@@ -283,8 +327,6 @@ router.put("/:patient_id", authenticateHospital, async (req, res) => {
         medical_condition,
         contact_phone,
         contact_email,
-        emergency_contact,
-        emergency_phone,
         patient_id,
         hospital_id,
       ],

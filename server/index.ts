@@ -4,6 +4,11 @@ import cors from "cors";
 import helmet from "helmet";
 import csrf from "csurf";
 import cookieParser from "cookie-parser";
+import {
+  initializeDatabase,
+  checkDatabaseConnection,
+  createDefaultAdminIfNotExists,
+} from "./config/init-db.js";
 import { handleDemo } from "./routes/demo";
 import adminAuthRoutes from "./routes/admin-auth";
 import hospitalRoutes from "./routes/hospitals";
@@ -22,6 +27,8 @@ import hospitalCleanupRoutes from "./routes/hospital-cleanup";
 import adminBlockchainRoutes from "./routes/admin-blockchain";
 import organizationAuthRoutes from "./routes/organization-auth";
 import organizationPoliciesRoutes from "./routes/organization-policies";
+import testBlockchainRoutes from "./routes/test-blockchain";
+import testIpfsRoutes from "./routes/test-ipfs";
 
 export function createServer() {
   const app = express();
@@ -75,5 +82,40 @@ export function createServer() {
   app.use("/api/hospital/notifications", hospitalNotificationsRoutes);
   app.use("/api/hospital/cleanup", hospitalCleanupRoutes);
 
+  // Test routes for development
+  app.use("/api/test/blockchain", testBlockchainRoutes);
+  app.use("/api/test/ipfs", testIpfsRoutes);
+
   return app;
 }
+
+// Initialize database on server startup
+async function startServer() {
+  try {
+    console.log("🚀 Starting OrganLink server...");
+
+    // Check database connection
+    const dbConnected = await checkDatabaseConnection();
+    if (!dbConnected) {
+      console.error(
+        "❌ Cannot connect to database. Please check your DATABASE_URL environment variable.",
+      );
+      process.exit(1);
+    }
+
+    // Initialize database schema
+    await initializeDatabase();
+
+    // Create default admin if needed
+    await createDefaultAdminIfNotExists();
+
+    console.log("✅ OrganLink server initialized successfully");
+    console.log("📖 Ready to serve requests...");
+  } catch (error) {
+    console.error("❌ Server initialization failed:", error);
+    process.exit(1);
+  }
+}
+
+// Initialize when module is imported
+startServer().catch(console.error);

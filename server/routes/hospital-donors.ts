@@ -77,29 +77,53 @@ router.post("/register", authenticateHospital, async (req, res) => {
       emergency_phone,
     } = req.body;
 
+    // Validate required fields
+    if (
+      !full_name ||
+      !age ||
+      !gender ||
+      !blood_type ||
+      !organs_to_donate ||
+      organs_to_donate.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Missing required fields: full_name, age, gender, blood_type, and organs_to_donate are required",
+      });
+    }
+
+    // Split full_name into first_name and last_name
+    const nameParts = full_name.trim().split(" ");
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
+
+    // Calculate approximate date_of_birth from age
+    const currentDate = new Date();
+    const birthYear = currentDate.getFullYear() - parseInt(age.toString());
+    const date_of_birth = `${birthYear}-01-01`; // Use January 1st as default
+
     // Generate unique donor ID
     const donor_id = `DON_${hospital_id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
     const result = await pool.query(
       `INSERT INTO donors (
-        donor_id, hospital_id, full_name, age, gender, blood_type, 
-        organs_to_donate, medical_history, contact_phone, 
-        contact_email, emergency_contact, emergency_phone
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        donor_id, hospital_id, first_name, last_name, date_of_birth, gender, blood_type,
+        organs_to_donate, medical_history, phone, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         donor_id,
         hospital_id,
-        full_name,
-        age,
+        first_name,
+        last_name,
+        date_of_birth,
         gender,
         blood_type,
         organs_to_donate,
         medical_history,
         contact_phone,
         contact_email,
-        emergency_contact,
-        emergency_phone,
       ],
     );
 
@@ -112,7 +136,7 @@ router.post("/register", authenticateHospital, async (req, res) => {
     console.error("Error registering donor:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to register donor",
+      error: `Failed to register donor: ${error.message}`,
     });
   }
 });
@@ -122,18 +146,23 @@ router.post("/:donor_id/signature", authenticateHospital, async (req, res) => {
   try {
     const hospital_id = req.hospital?.hospital_id;
     const { donor_id } = req.params;
-    const { signature_ipfs_hash, blockchain_tx_hash, signature_verified } =
-      req.body;
+    const {
+      signature_ipfs_hash,
+      verification_tx_hash,
+      ocr_verified,
+      blockchain_verified,
+    } = req.body;
 
     const result = await pool.query(
       `UPDATE donors
-       SET signature_ipfs_hash = $1, blockchain_tx_hash = $2, signature_verified = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE donor_id = $4 AND hospital_id = $5
+       SET signature_ipfs_hash = $1, verification_tx_hash = $2, ocr_verified = $3, blockchain_verified = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE donor_id = $5 AND hospital_id = $6
        RETURNING *`,
       [
         signature_ipfs_hash,
-        blockchain_tx_hash || null,
-        signature_verified || false,
+        verification_tx_hash || null,
+        ocr_verified || false,
+        blockchain_verified || false,
         donor_id,
         hospital_id,
       ],
@@ -165,14 +194,23 @@ router.patch("/:donor_id/status", authenticateHospital, async (req, res) => {
   try {
     const hospital_id = req.hospital?.hospital_id;
     const { donor_id } = req.params;
-    const { is_active } = req.body;
+    const { status } = req.body;
+
+    // Validate status value
+    const validStatuses = ["active", "matched", "completed", "inactive"];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      });
+    }
 
     const result = await pool.query(
-      `UPDATE donors 
-       SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+      `UPDATE donors
+       SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE donor_id = $2 AND hospital_id = $3
        RETURNING *`,
-      [is_active, donor_id, hospital_id],
+      [status || "active", donor_id, hospital_id],
     );
 
     if (result.rows.length === 0) {

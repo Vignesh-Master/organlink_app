@@ -61,7 +61,7 @@ export default function RegisterPatient() {
     gender: "",
     blood_type: "",
     organ_needed: "",
-    urgency_level: "Medium",
+    urgency_level: "medium",
     medical_condition: "",
     contact_phone: "",
     contact_email: "",
@@ -314,7 +314,12 @@ export default function RegisterPatient() {
     "Cornea",
     "Bone Marrow",
   ];
-  const urgencyLevels = ["Low", "Medium", "High", "Critical"];
+  const urgencyLevels = [
+    { value: "low", label: "Low" },
+    { value: "medium", label: "Medium" },
+    { value: "high", label: "High" },
+    { value: "critical", label: "Critical" },
+  ];
 
   return (
     <HospitalLayout
@@ -440,9 +445,9 @@ export default function RegisterPatient() {
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -505,8 +510,8 @@ export default function RegisterPatient() {
                         </SelectTrigger>
                         <SelectContent>
                           {urgencyLevels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

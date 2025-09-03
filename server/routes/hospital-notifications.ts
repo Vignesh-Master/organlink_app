@@ -39,7 +39,7 @@ router.get("/unread-count", authenticateHospital, async (req, res) => {
     const hospitalId = req.hospital?.hospital_id;
 
     const result = await pool.query(
-      "SELECT COUNT(*) as count FROM notifications WHERE hospital_id = $1 AND is_read = false",
+      "SELECT COUNT(*) as count FROM notifications WHERE hospital_id = $1 AND read = false",
       [hospitalId],
     );
 
@@ -63,8 +63,8 @@ router.put("/:notificationId/read", authenticateHospital, async (req, res) => {
     const { notificationId } = req.params;
 
     const result = await pool.query(
-      `UPDATE notifications 
-       SET is_read = true, updated_at = CURRENT_TIMESTAMP 
+      `UPDATE notifications
+       SET read = true, updated_at = CURRENT_TIMESTAMP
        WHERE notification_id = $1 AND hospital_id = $2`,
       [notificationId, hospitalId],
     );
@@ -95,9 +95,9 @@ router.put("/mark-all-read", authenticateHospital, async (req, res) => {
     const hospitalId = req.hospital?.hospital_id;
 
     await pool.query(
-      `UPDATE notifications 
-       SET is_read = true, updated_at = CURRENT_TIMESTAMP 
-       WHERE hospital_id = $1 AND is_read = false`,
+      `UPDATE notifications
+       SET read = true, updated_at = CURRENT_TIMESTAMP
+       WHERE hospital_id = $1 AND read = false`,
       [hospitalId],
     );
 
