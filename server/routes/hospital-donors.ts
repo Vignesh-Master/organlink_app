@@ -77,29 +77,45 @@ router.post("/register", authenticateHospital, async (req, res) => {
       emergency_phone,
     } = req.body;
 
+    // Validate required fields
+    if (!full_name || !age || !gender || !blood_type || !organs_to_donate || organs_to_donate.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: full_name, age, gender, blood_type, and organs_to_donate are required",
+      });
+    }
+
+    // Split full_name into first_name and last_name
+    const nameParts = full_name.trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Calculate approximate date_of_birth from age
+    const currentDate = new Date();
+    const birthYear = currentDate.getFullYear() - parseInt(age.toString());
+    const date_of_birth = `${birthYear}-01-01`; // Use January 1st as default
+
     // Generate unique donor ID
     const donor_id = `DON_${hospital_id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
     const result = await pool.query(
       `INSERT INTO donors (
-        donor_id, hospital_id, full_name, age, gender, blood_type, 
-        organs_to_donate, medical_history, contact_phone, 
-        contact_email, emergency_contact, emergency_phone
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        donor_id, hospital_id, first_name, last_name, date_of_birth, gender, blood_type,
+        organs_to_donate, medical_history, phone, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         donor_id,
         hospital_id,
-        full_name,
-        age,
+        first_name,
+        last_name,
+        date_of_birth,
         gender,
         blood_type,
         organs_to_donate,
         medical_history,
         contact_phone,
         contact_email,
-        emergency_contact,
-        emergency_phone,
       ],
     );
 
@@ -112,7 +128,7 @@ router.post("/register", authenticateHospital, async (req, res) => {
     console.error("Error registering donor:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to register donor",
+      error: `Failed to register donor: ${error.message}`,
     });
   }
 });
