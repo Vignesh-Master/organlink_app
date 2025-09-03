@@ -96,8 +96,8 @@ router.get("/stats", authenticateHospital, async (req, res) => {
     // Get notifications count
     const notificationCount = await pool.query(
       `SELECT COUNT(*) as unread_count
-       FROM notifications 
-       WHERE hospital_id = $1 AND is_read = false`,
+       FROM notifications
+       WHERE hospital_id = $1 AND read = false`,
       [hospital_id],
     );
 
