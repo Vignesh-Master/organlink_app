@@ -80,6 +80,7 @@ export function createServer() {
 
   // Test routes for development
   app.use("/api/test/blockchain", testBlockchainRoutes);
+  app.use("/api/test/ipfs", testIpfsRoutes);
 
   return app;
 }
