@@ -61,7 +61,7 @@ export default function RegisterPatient() {
     gender: "",
     blood_type: "",
     organ_needed: "",
-    urgency_level: "Medium",
+    urgency_level: "medium",
     medical_condition: "",
     contact_phone: "",
     contact_email: "",
@@ -314,7 +314,12 @@ export default function RegisterPatient() {
     "Cornea",
     "Bone Marrow",
   ];
-  const urgencyLevels = ["Low", "Medium", "High", "Critical"];
+  const urgencyLevels = [
+    { value: "low", label: "Low" },
+    { value: "medium", label: "Medium" },
+    { value: "high", label: "High" },
+    { value: "critical", label: "Critical" }
+  ];
 
   return (
     <HospitalLayout
