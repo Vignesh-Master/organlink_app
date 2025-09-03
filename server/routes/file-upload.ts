@@ -241,12 +241,10 @@ router.post("/blockchain-register", authenticateHospital, async (req, res) => {
     });
   } catch (error: any) {
     console.error("Blockchain registration error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: error.message || "Failed to register on blockchain",
-      });
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to register on blockchain",
+    });
   }
 });
 

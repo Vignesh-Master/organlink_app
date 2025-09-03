@@ -6,15 +6,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OrganizationLayout from "@/components/organization/OrganizationLayout";
 import { useState, useEffect } from "react";
-import { 
-  CheckCircle, 
-  XCircle, 
-  MinusCircle, 
-  Clock, 
-  Users, 
+import {
+  CheckCircle,
+  XCircle,
+  MinusCircle,
+  Clock,
+  Users,
   FileText,
   ExternalLink,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 
 interface Proposal {
@@ -58,35 +58,43 @@ export default function Vote() {
 
   const fetchProposal = async () => {
     if (!proposalId || isNaN(Number(proposalId))) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem("organization_token");
-      const res = await fetch(`/api/organization/policies/proposal/${proposalId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      
+      const res = await fetch(
+        `/api/organization/policies/proposal/${proposalId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
+
       if (!res.ok) {
         throw new Error("Failed to fetch proposal");
       }
-      
+
       const data = await res.json();
       setProposal(data.proposal);
       setTally(data.tally);
-      
+
       // Try to fetch metadata from IPFS (would need real implementation)
       if (data.proposal?.ipfsCid) {
         // For demo, set mock metadata
         setMetadata({
           title: `Policy Proposal #${proposalId}`,
-          rationale: "This proposal aims to improve organ allocation efficiency and ensure fair distribution based on medical need and compatibility.",
+          rationale:
+            "This proposal aims to improve organ allocation efficiency and ensure fair distribution based on medical need and compatibility.",
           parameters: {
             organ: "kidney",
-            priority_factors: ["medical_urgency", "compatibility_score", "waiting_time"],
-            geographic_preference: true
+            priority_factors: [
+              "medical_urgency",
+              "compatibility_score",
+              "waiting_time",
+            ],
+            geographic_preference: true,
           },
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         });
       }
     } catch (e: any) {
@@ -107,25 +115,24 @@ export default function Vote() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          proposal_id: Number(proposalId), 
+        body: JSON.stringify({
+          proposal_id: Number(proposalId),
           vote: voteType,
-          reason: votingReason 
+          reason: votingReason,
         }),
       });
-      
+
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to vote");
       }
-      
+
       setTx(data.txHash);
-      
+
       // Refresh proposal data after voting
       setTimeout(() => {
         fetchProposal();
       }, 2000);
-      
     } catch (e: any) {
       setError(e.message || "Failed to vote");
     } finally {
@@ -133,51 +140,54 @@ export default function Vote() {
     }
   };
 
-  const isVotingOpen = proposal && 
-    proposal.status === 0 && 
-    Date.now() / 1000 >= proposal.startTime && 
+  const isVotingOpen =
+    proposal &&
+    proposal.status === 0 &&
+    Date.now() / 1000 >= proposal.startTime &&
     Date.now() / 1000 <= proposal.endTime;
 
   const getStatusBadge = () => {
     if (!proposal) return null;
-    
+
     if (proposal.status === 2) {
       return <Badge variant="destructive">Canceled</Badge>;
     }
-    
+
     if (proposal.status === 1) {
-      return <Badge variant={proposal.passed ? "default" : "secondary"}>
-        {proposal.passed ? "Passed" : "Failed"}
-      </Badge>;
+      return (
+        <Badge variant={proposal.passed ? "default" : "secondary"}>
+          {proposal.passed ? "Passed" : "Failed"}
+        </Badge>
+      );
     }
-    
+
     if (Date.now() / 1000 > proposal.endTime) {
       return <Badge variant="outline">Voting Ended</Badge>;
     }
-    
+
     if (Date.now() / 1000 < proposal.startTime) {
       return <Badge variant="outline">Not Started</Badge>;
     }
-    
+
     return <Badge className="bg-green-100 text-green-800">Active</Badge>;
   };
 
   const getTimeRemaining = () => {
     if (!proposal) return "";
-    
+
     const now = Date.now() / 1000;
     const timeLeft = proposal.endTime - now;
-    
+
     if (timeLeft <= 0) return "Voting ended";
-    
+
     const hours = Math.floor(timeLeft / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
-    
+
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return `${days} day${days > 1 ? 's' : ''} remaining`;
+      return `${days} day${days > 1 ? "s" : ""} remaining`;
     }
-    
+
     return `${hours}h ${minutes}m remaining`;
   };
 
@@ -214,8 +224,8 @@ export default function Vote() {
                 value={proposalId}
                 onChange={(e) => setProposalId(e.target.value)}
               />
-              <Button 
-                onClick={fetchProposal} 
+              <Button
+                onClick={fetchProposal}
                 disabled={!proposalId || loading}
                 variant="outline"
               >
@@ -248,21 +258,29 @@ export default function Vote() {
                   {metadata && (
                     <>
                       <div>
-                        <h3 className="font-semibold text-lg mb-2">{metadata.title}</h3>
-                        <p className="text-gray-600 leading-relaxed">{metadata.rationale}</p>
+                        <h3 className="font-semibold text-lg mb-2">
+                          {metadata.title}
+                        </h3>
+                        <p className="text-gray-600 leading-relaxed">
+                          {metadata.rationale}
+                        </p>
                       </div>
-                      
+
                       {metadata.parameters && (
                         <div>
-                          <h4 className="font-medium mb-2">Policy Parameters</h4>
+                          <h4 className="font-medium mb-2">
+                            Policy Parameters
+                          </h4>
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <pre className="text-sm">{JSON.stringify(metadata.parameters, null, 2)}</pre>
+                            <pre className="text-sm">
+                              {JSON.stringify(metadata.parameters, null, 2)}
+                            </pre>
                           </div>
                         </div>
                       )}
                     </>
                   )}
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -305,18 +323,18 @@ export default function Vote() {
                         rows={3}
                       />
                     </div>
-                    
+
                     <div className="flex gap-3">
-                      <Button 
-                        onClick={() => vote(1)} 
+                      <Button
+                        onClick={() => vote(1)}
                         disabled={voting}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Vote For
                       </Button>
-                      <Button 
-                        onClick={() => vote(2)} 
+                      <Button
+                        onClick={() => vote(2)}
                         disabled={voting}
                         variant="destructive"
                         className="flex-1"
@@ -324,8 +342,8 @@ export default function Vote() {
                         <XCircle className="h-4 w-4 mr-2" />
                         Vote Against
                       </Button>
-                      <Button 
-                        onClick={() => vote(3)} 
+                      <Button
+                        onClick={() => vote(3)}
                         disabled={voting}
                         variant="outline"
                         className="flex-1"
@@ -334,7 +352,7 @@ export default function Vote() {
                         Abstain
                       </Button>
                     </div>
-                    
+
                     {voting && (
                       <p className="text-sm text-gray-600 text-center">
                         Submitting vote to blockchain...
@@ -348,14 +366,13 @@ export default function Vote() {
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    {proposal.status === 1 
-                      ? "This proposal has been finalized." 
-                      : proposal.status === 2 
-                      ? "This proposal has been canceled."
-                      : Date.now() / 1000 > proposal.endTime
-                      ? "Voting period has ended."
-                      : "Voting has not started yet."
-                    }
+                    {proposal.status === 1
+                      ? "This proposal has been finalized."
+                      : proposal.status === 2
+                        ? "This proposal has been canceled."
+                        : Date.now() / 1000 > proposal.endTime
+                          ? "Voting period has ended."
+                          : "Voting has not started yet."}
                   </AlertDescription>
                 </Alert>
               )}
@@ -377,28 +394,36 @@ export default function Vote() {
                         </span>
                         <span className="font-semibold">{tally.forVotes}</span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2 text-red-700">
                           <XCircle className="h-4 w-4" />
                           Against
                         </span>
-                        <span className="font-semibold">{tally.againstVotes}</span>
+                        <span className="font-semibold">
+                          {tally.againstVotes}
+                        </span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center">
                         <span className="flex items-center gap-2 text-gray-600">
                           <MinusCircle className="h-4 w-4" />
                           Abstain
                         </span>
-                        <span className="font-semibold">{tally.abstainVotes}</span>
+                        <span className="font-semibold">
+                          {tally.abstainVotes}
+                        </span>
                       </div>
                     </div>
-                    
+
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center text-sm">
                         <span>Total Votes</span>
-                        <span>{tally.forVotes + tally.againstVotes + tally.abstainVotes}</span>
+                        <span>
+                          {tally.forVotes +
+                            tally.againstVotes +
+                            tally.abstainVotes}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span>Eligible Voters</span>
@@ -409,22 +434,21 @@ export default function Vote() {
                         <span>{calculatePassingThreshold()}</span>
                       </div>
                     </div>
-                    
+
                     {/* Progress Bar */}
                     <div className="space-y-2">
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                          style={{ 
-                            width: `${tally.eligibleCount > 0 ? (tally.forVotes / tally.eligibleCount) * 100 : 0}%` 
+                          style={{
+                            width: `${tally.eligibleCount > 0 ? (tally.forVotes / tally.eligibleCount) * 100 : 0}%`,
                           }}
                         />
                       </div>
                       <p className="text-xs text-gray-600 text-center">
-                        {tally.eligibleCount > 0 
+                        {tally.eligibleCount > 0
                           ? `${Math.round((tally.forVotes / tally.eligibleCount) * 100)}% approval`
-                          : "No eligible voters"
-                        }
+                          : "No eligible voters"}
                       </p>
                     </div>
                   </CardContent>
@@ -435,7 +459,9 @@ export default function Vote() {
               {tx && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base text-green-700">Vote Submitted!</CardTitle>
+                    <CardTitle className="text-base text-green-700">
+                      Vote Submitted!
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">

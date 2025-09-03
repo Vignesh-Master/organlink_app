@@ -4,7 +4,11 @@ import cors from "cors";
 import helmet from "helmet";
 import csrf from "csurf";
 import cookieParser from "cookie-parser";
-import { initializeDatabase, checkDatabaseConnection, createDefaultAdminIfNotExists } from "./config/init-db.js";
+import {
+  initializeDatabase,
+  checkDatabaseConnection,
+  createDefaultAdminIfNotExists,
+} from "./config/init-db.js";
 import { handleDemo } from "./routes/demo";
 import adminAuthRoutes from "./routes/admin-auth";
 import hospitalRoutes from "./routes/hospitals";
@@ -88,12 +92,14 @@ export function createServer() {
 // Initialize database on server startup
 async function startServer() {
   try {
-    console.log('🚀 Starting OrganLink server...');
+    console.log("🚀 Starting OrganLink server...");
 
     // Check database connection
     const dbConnected = await checkDatabaseConnection();
     if (!dbConnected) {
-      console.error('❌ Cannot connect to database. Please check your DATABASE_URL environment variable.');
+      console.error(
+        "❌ Cannot connect to database. Please check your DATABASE_URL environment variable.",
+      );
       process.exit(1);
     }
 
@@ -103,11 +109,10 @@ async function startServer() {
     // Create default admin if needed
     await createDefaultAdminIfNotExists();
 
-    console.log('✅ OrganLink server initialized successfully');
-    console.log('📖 Ready to serve requests...');
-
+    console.log("✅ OrganLink server initialized successfully");
+    console.log("📖 Ready to serve requests...");
   } catch (error) {
-    console.error('❌ Server initialization failed:', error);
+    console.error("❌ Server initialization failed:", error);
     process.exit(1);
   }
 }

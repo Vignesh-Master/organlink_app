@@ -82,14 +82,15 @@ router.post("/register", authenticateHospital, async (req, res) => {
     if (!full_name || !age || !gender || !blood_type || !organ_needed) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: full_name, age, gender, blood_type, and organ_needed are required",
+        error:
+          "Missing required fields: full_name, age, gender, blood_type, and organ_needed are required",
       });
     }
 
     // Split full_name into first_name and last_name
-    const nameParts = full_name.trim().split(' ');
-    const first_name = nameParts[0] || '';
-    const last_name = nameParts.slice(1).join(' ') || '';
+    const nameParts = full_name.trim().split(" ");
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
 
     // Calculate approximate date_of_birth from age
     const currentDate = new Date();
@@ -143,8 +144,12 @@ router.post(
     try {
       const hospital_id = req.hospital?.hospital_id;
       const { patient_id } = req.params;
-      const { signature_ipfs_hash, verification_tx_hash, ocr_verified, blockchain_verified } =
-        req.body;
+      const {
+        signature_ipfs_hash,
+        verification_tx_hash,
+        ocr_verified,
+        blockchain_verified,
+      } = req.body;
 
       const result = await pool.query(
         `UPDATE patients
@@ -191,11 +196,11 @@ router.patch("/:patient_id/status", authenticateHospital, async (req, res) => {
     const { status } = req.body;
 
     // Validate status value
-    const validStatuses = ['active', 'matched', 'completed', 'inactive'];
+    const validStatuses = ["active", "matched", "completed", "inactive"];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
       });
     }
 
@@ -204,7 +209,7 @@ router.patch("/:patient_id/status", authenticateHospital, async (req, res) => {
        SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE patient_id = $2 AND hospital_id = $3
        RETURNING *`,
-      [status || 'active', patient_id, hospital_id],
+      [status || "active", patient_id, hospital_id],
     );
 
     if (result.rows.length === 0) {
@@ -279,9 +284,9 @@ router.put("/:patient_id", authenticateHospital, async (req, res) => {
     } = req.body;
 
     // Split full_name into first_name and last_name
-    const nameParts = full_name ? full_name.trim().split(' ') : ['', ''];
-    const first_name = nameParts[0] || '';
-    const last_name = nameParts.slice(1).join(' ') || '';
+    const nameParts = full_name ? full_name.trim().split(" ") : ["", ""];
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
 
     // Calculate approximate date_of_birth from age if provided
     let date_of_birth = null;

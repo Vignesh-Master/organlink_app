@@ -1,24 +1,24 @@
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Upload, 
-  Camera, 
-  FileText, 
-  CheckCircle, 
-  XCircle, 
+import React, { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import {
+  Upload,
+  Camera,
+  FileText,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   Eye,
   Chain,
   ExternalLink,
-  Loader2
-} from 'lucide-react';
+  Loader2,
+} from "lucide-react";
 
 interface SignatureUploadProps {
-  recordType: 'patient' | 'donor';
+  recordType: "patient" | "donor";
   recordId: string;
   patientName?: string;
   onUploadComplete?: (result: any) => void;
@@ -42,11 +42,11 @@ interface UploadResult {
   error?: string;
 }
 
-export default function SignatureUpload({ 
-  recordType, 
-  recordId, 
+export default function SignatureUpload({
+  recordType,
+  recordId,
   patientName,
-  onUploadComplete 
+  onUploadComplete,
 }: SignatureUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -61,14 +61,14 @@ export default function SignatureUpload({
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
         return;
       }
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB');
+        alert("File size must be less than 10MB");
         return;
       }
 
@@ -87,23 +87,23 @@ export default function SignatureUpload({
 
     setUploading(true);
     setProcessing(true);
-    
+
     try {
       const formData = new FormData();
-      formData.append('signature', selectedFile);
-      formData.append('record_type', recordType);
-      formData.append('record_id', recordId);
+      formData.append("signature", selectedFile);
+      formData.append("record_type", recordType);
+      formData.append("record_id", recordId);
       if (patientName) {
-        formData.append('patient_name', patientName);
+        formData.append("patient_name", patientName);
       }
 
-      const token = localStorage.getItem('hospital_token');
-      const response = await fetch('/api/hospital/upload/signature', {
-        method: 'POST',
+      const token = localStorage.getItem("hospital_token");
+      const response = await fetch("/api/hospital/upload/signature", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: formData
+        body: formData,
       });
 
       const result: UploadResult = await response.json();
@@ -112,12 +112,11 @@ export default function SignatureUpload({
       if (result.success && onUploadComplete) {
         onUploadComplete(result);
       }
-
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       setUploadResult({
         success: false,
-        error: 'Upload failed. Please try again.'
+        error: "Upload failed. Please try again.",
       });
     } finally {
       setUploading(false);
@@ -129,35 +128,36 @@ export default function SignatureUpload({
     if (!uploadResult?.ipfsHash) return;
 
     setRegistering(true);
-    
+
     try {
-      const token = localStorage.getItem('hospital_token');
-      const response = await fetch('/api/hospital/upload/blockchain-register', {
-        method: 'POST',
+      const token = localStorage.getItem("hospital_token");
+      const response = await fetch("/api/hospital/upload/blockchain-register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           record_type: recordType,
           record_id: recordId,
           ipfs_hash: uploadResult.ipfsHash,
-          ocr_score_bps: Math.round((uploadResult.ocrVerification?.confidence || 0) * 10000),
-          verified: uploadResult.ocrVerification?.isValid || false
-        })
+          ocr_score_bps: Math.round(
+            (uploadResult.ocrVerification?.confidence || 0) * 10000,
+          ),
+          verified: uploadResult.ocrVerification?.isValid || false,
+        }),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setBlockchainTx(result.blockchainTxHash);
       } else {
-        throw new Error(result.error || 'Blockchain registration failed');
+        throw new Error(result.error || "Blockchain registration failed");
       }
-
     } catch (error) {
-      console.error('Blockchain registration error:', error);
-      alert('Failed to register on blockchain: ' + error);
+      console.error("Blockchain registration error:", error);
+      alert("Failed to register on blockchain: " + error);
     } finally {
       setRegistering(false);
     }
@@ -165,7 +165,7 @@ export default function SignatureUpload({
 
   const getOCRStatusIcon = (ocr?: OCRResult) => {
     if (!ocr) return <AlertTriangle className="h-4 w-4 text-gray-500" />;
-    
+
     if (ocr.isValid) {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
     } else {
@@ -175,7 +175,7 @@ export default function SignatureUpload({
 
   const getOCRStatusBadge = (ocr?: OCRResult) => {
     if (!ocr) return <Badge variant="secondary">No OCR</Badge>;
-    
+
     if (ocr.isValid) {
       return <Badge className="bg-green-100 text-green-800">Verified</Badge>;
     } else {
@@ -189,7 +189,7 @@ export default function SignatureUpload({
     setUploadResult(null);
     setBlockchainTx(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -211,14 +211,16 @@ export default function SignatureUpload({
             onChange={handleFileSelect}
             className="hidden"
           />
-          
+
           {!selectedFile ? (
-            <div 
+            <div
               className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-700 mb-2">Upload Signature Document</p>
+              <p className="text-lg font-medium text-gray-700 mb-2">
+                Upload Signature Document
+              </p>
               <p className="text-sm text-gray-500 mb-4">
                 Click to select an image file or drag and drop
               </p>
@@ -236,12 +238,12 @@ export default function SignatureUpload({
                     Change File
                   </Button>
                 </div>
-                
+
                 <div className="flex items-start gap-4">
                   {previewUrl && (
-                    <img 
-                      src={previewUrl} 
-                      alt="Signature preview" 
+                    <img
+                      src={previewUrl}
+                      alt="Signature preview"
                       className="w-32 h-32 object-cover rounded border"
                     />
                   )}
@@ -261,15 +263,15 @@ export default function SignatureUpload({
 
               {/* Upload Button */}
               {!uploadResult && (
-                <Button 
-                  onClick={handleUpload} 
+                <Button
+                  onClick={handleUpload}
                   disabled={uploading || !selectedFile}
                   className="w-full"
                 >
                   {uploading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {processing ? 'Processing with OCR...' : 'Uploading...'}
+                      {processing ? "Processing with OCR..." : "Uploading..."}
                     </>
                   ) : (
                     <>
@@ -288,7 +290,7 @@ export default function SignatureUpload({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>Processing signature...</span>
-              <span>{processing ? 'Running OCR' : 'Uploading'}</span>
+              <span>{processing ? "Running OCR" : "Uploading"}</span>
             </div>
             <Progress value={processing ? 75 : 25} className="h-2" />
           </div>
@@ -301,7 +303,8 @@ export default function SignatureUpload({
               <Alert className="border-green-200 bg-green-50">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  <strong>Upload successful!</strong> File processed and stored on IPFS.
+                  <strong>Upload successful!</strong> File processed and stored
+                  on IPFS.
                 </AlertDescription>
               </Alert>
             ) : (
@@ -328,16 +331,19 @@ export default function SignatureUpload({
                     <div>
                       <span className="font-medium">Confidence Score:</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <Progress 
-                          value={uploadResult.ocrVerification.confidence * 100} 
-                          className="h-2 flex-1" 
+                        <Progress
+                          value={uploadResult.ocrVerification.confidence * 100}
+                          className="h-2 flex-1"
                         />
                         <span className="text-xs font-mono">
-                          {Math.round(uploadResult.ocrVerification.confidence * 100)}%
+                          {Math.round(
+                            uploadResult.ocrVerification.confidence * 100,
+                          )}
+                          %
                         </span>
                       </div>
                     </div>
-                    
+
                     <div>
                       <span className="font-medium">Name Match:</span>
                       <div className="flex items-center gap-1 mt-1">
@@ -347,7 +353,9 @@ export default function SignatureUpload({
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
                         <span className="text-xs">
-                          {uploadResult.ocrVerification.nameMatch ? 'Matched' : 'No match'}
+                          {uploadResult.ocrVerification.nameMatch
+                            ? "Matched"
+                            : "No match"}
                         </span>
                       </div>
                     </div>
@@ -355,7 +363,9 @@ export default function SignatureUpload({
 
                   {uploadResult.ocrVerification.extractedText && (
                     <div>
-                      <span className="font-medium text-sm">Extracted Text:</span>
+                      <span className="font-medium text-sm">
+                        Extracted Text:
+                      </span>
                       <p className="text-sm bg-gray-50 p-2 rounded mt-1 font-mono">
                         "{uploadResult.ocrVerification.extractedText}"
                       </p>
@@ -364,13 +374,21 @@ export default function SignatureUpload({
 
                   {uploadResult.ocrVerification.matchedPatterns.length > 0 && (
                     <div>
-                      <span className="font-medium text-sm">Detected Patterns:</span>
+                      <span className="font-medium text-sm">
+                        Detected Patterns:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {uploadResult.ocrVerification.matchedPatterns.map(pattern => (
-                          <Badge key={pattern} variant="outline" className="text-xs">
-                            {pattern.replace(/_/g, ' ')}
-                          </Badge>
-                        ))}
+                        {uploadResult.ocrVerification.matchedPatterns.map(
+                          (pattern) => (
+                            <Badge
+                              key={pattern}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {pattern.replace(/_/g, " ")}
+                            </Badge>
+                          ),
+                        )}
                       </div>
                     </div>
                   )}
@@ -392,18 +410,25 @@ export default function SignatureUpload({
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => window.open(uploadResult.fileUrl, '_blank')}
+                      onClick={() =>
+                        window.open(uploadResult.fileUrl, "_blank")
+                      }
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       View File
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${uploadResult.ipfsHash}`, '_blank')}
+                      onClick={() =>
+                        window.open(
+                          `https://gateway.pinata.cloud/ipfs/${uploadResult.ipfsHash}`,
+                          "_blank",
+                        )
+                      }
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Open in IPFS
@@ -424,9 +449,10 @@ export default function SignatureUpload({
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-3">
-                    Register this signature verification on the blockchain for permanent proof.
+                    Register this signature verification on the blockchain for
+                    permanent proof.
                   </p>
-                  <Button 
+                  <Button
                     onClick={handleBlockchainRegistration}
                     disabled={registering}
                     className="w-full"
@@ -454,7 +480,7 @@ export default function SignatureUpload({
                 <AlertDescription className="text-blue-800">
                   <strong>Blockchain registration successful!</strong>
                   <div className="mt-2">
-                    <a 
+                    <a
                       href={`https://sepolia.etherscan.io/tx/${blockchainTx}`}
                       target="_blank"
                       rel="noopener noreferrer"

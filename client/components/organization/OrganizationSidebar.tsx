@@ -1,18 +1,18 @@
 import { useLocation, NavLink } from "react-router-dom";
-import { 
-  LayoutGrid, 
-  FileText, 
-  Vote, 
-  PlusCircle, 
-  History, 
-  BarChart3, 
-  Settings, 
-  User, 
+import {
+  LayoutGrid,
+  FileText,
+  Vote,
+  PlusCircle,
+  History,
+  BarChart3,
+  Settings,
+  User,
   Building2,
   Bell,
   HelpCircle,
   LogOut,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +24,14 @@ interface Props {
 
 export default function OrganizationSidebar({ onNavigate }: Props) {
   const location = useLocation();
-  
+
   const mainNavigation = [
     {
       name: "Dashboard",
       href: "/organization/dashboard",
       icon: LayoutGrid,
-      description: "Overview & quick actions"
-    }
+      description: "Overview & quick actions",
+    },
   ];
 
   const policyNavigation = [
@@ -40,7 +40,7 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
       href: "/organization/policies",
       icon: FileText,
       description: "Browse all policies",
-      badge: "24"
+      badge: "24",
     },
     {
       name: "Active Votes",
@@ -48,14 +48,14 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
       icon: Vote,
       description: "Policies requiring votes",
       badge: "3",
-      urgent: true
+      urgent: true,
     },
     {
       name: "Propose Policy",
       href: "/organization/policies/propose",
       icon: PlusCircle,
-      description: "Create new proposal"
-    }
+      description: "Create new proposal",
+    },
   ];
 
   const analyticsNavigation = [
@@ -63,14 +63,14 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
       name: "Analytics",
       href: "/organization/analytics",
       icon: BarChart3,
-      description: "Policy insights & trends"
+      description: "Policy insights & trends",
     },
     {
       name: "History",
       href: "/organization/history",
       icon: History,
-      description: "Past voting activity"
-    }
+      description: "Past voting activity",
+    },
   ];
 
   const accountNavigation = [
@@ -78,26 +78,26 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
       name: "Organization Profile",
       href: "/organization/profile",
       icon: Building2,
-      description: "Manage organization info"
+      description: "Manage organization info",
     },
     {
       name: "Notifications",
       href: "/organization/notifications",
       icon: Bell,
       description: "Alerts & updates",
-      badge: "2"
+      badge: "2",
     },
     {
       name: "Settings",
       href: "/organization/settings",
       icon: Settings,
-      description: "Preferences & configuration"
-    }
+      description: "Preferences & configuration",
+    },
   ];
 
-  const NavItem = ({ item, section }: { item: any, section: string }) => {
+  const NavItem = ({ item, section }: { item: any; section: string }) => {
     const isActive = location.pathname === item.href;
-    
+
     return (
       <NavLink
         key={item.name}
@@ -111,20 +111,24 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
         }
       >
         <div className="flex items-center space-x-3 min-w-0 flex-1">
-          <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-medical-600' : 'text-gray-500'}`} />
+          <item.icon
+            className={`h-4 w-4 flex-shrink-0 ${isActive ? "text-medical-600" : "text-gray-500"}`}
+          />
           <div className="min-w-0 flex-1">
             <p className="font-medium truncate">{item.name}</p>
             {item.description && (
-              <p className="text-xs text-gray-500 truncate">{item.description}</p>
+              <p className="text-xs text-gray-500 truncate">
+                {item.description}
+              </p>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-1">
           {item.badge && (
-            <Badge 
-              variant={item.urgent ? "destructive" : "secondary"} 
-              className={`text-xs px-1.5 py-0.5 ${item.urgent ? 'bg-red-100 text-red-700' : ''}`}
+            <Badge
+              variant={item.urgent ? "destructive" : "secondary"}
+              className={`text-xs px-1.5 py-0.5 ${item.urgent ? "bg-red-100 text-red-700" : ""}`}
             >
               {item.badge}
             </Badge>
@@ -138,7 +142,7 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
   const orgInfo = {
     name: "World Health Organization",
     email: "who@organlink.org",
-    role: "Policy Contributor"
+    role: "Policy Contributor",
   };
 
   return (
@@ -150,16 +154,20 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
             <Building2 className="h-6 w-6 text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold text-gray-900 truncate">OrganLink</h2>
+            <h2 className="text-lg font-bold text-gray-900 truncate">
+              OrganLink
+            </h2>
             <p className="text-xs text-gray-500">Organization Portal</p>
           </div>
         </div>
-        
+
         {/* Current Organization */}
         <div className="bg-gray-50 rounded-lg p-3">
           <div className="flex items-center space-x-2 mb-1">
             <User className="h-4 w-4 text-gray-500" />
-            <p className="text-sm font-medium text-gray-900 truncate">{orgInfo.name}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {orgInfo.name}
+            </p>
           </div>
           <p className="text-xs text-gray-600 truncate">{orgInfo.email}</p>
           <Badge variant="outline" className="mt-1 text-xs">
@@ -224,24 +232,24 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
       {/* Quick Actions */}
       <div className="p-4 border-t border-gray-200">
         <div className="space-y-2 mb-4">
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="w-full bg-medical-600 hover:bg-medical-700"
             onClick={() => {
-              window.location.href = '/organization/policies/propose';
+              window.location.href = "/organization/policies/propose";
               onNavigate?.();
             }}
           >
             <PlusCircle className="h-4 w-4 mr-2" />
             New Proposal
           </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
+
+          <Button
+            variant="outline"
+            size="sm"
             className="w-full"
             onClick={() => {
-              window.location.href = '/organization/policies/vote';
+              window.location.href = "/organization/policies/vote";
               onNavigate?.();
             }}
           >
@@ -252,17 +260,17 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
 
         {/* Help & Logout */}
         <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="text-gray-500 hover:text-gray-700"
           >
             <HelpCircle className="h-4 w-4 mr-1" />
             Help
           </Button>
-          
-          <Button 
-            variant="ghost" 
+
+          <Button
+            variant="ghost"
             size="sm"
             className="text-gray-500 hover:text-gray-700"
             onClick={() => {
@@ -274,7 +282,7 @@ export default function OrganizationSidebar({ onNavigate }: Props) {
             Logout
           </Button>
         </div>
-        
+
         {/* Footer */}
         <div className="text-xs text-gray-500 text-center mt-4">
           <p>OrganLink v1.0.0</p>

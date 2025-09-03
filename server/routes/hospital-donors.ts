@@ -78,17 +78,25 @@ router.post("/register", authenticateHospital, async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!full_name || !age || !gender || !blood_type || !organs_to_donate || organs_to_donate.length === 0) {
+    if (
+      !full_name ||
+      !age ||
+      !gender ||
+      !blood_type ||
+      !organs_to_donate ||
+      organs_to_donate.length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: full_name, age, gender, blood_type, and organs_to_donate are required",
+        error:
+          "Missing required fields: full_name, age, gender, blood_type, and organs_to_donate are required",
       });
     }
 
     // Split full_name into first_name and last_name
-    const nameParts = full_name.trim().split(' ');
-    const first_name = nameParts[0] || '';
-    const last_name = nameParts.slice(1).join(' ') || '';
+    const nameParts = full_name.trim().split(" ");
+    const first_name = nameParts[0] || "";
+    const last_name = nameParts.slice(1).join(" ") || "";
 
     // Calculate approximate date_of_birth from age
     const currentDate = new Date();
@@ -138,8 +146,12 @@ router.post("/:donor_id/signature", authenticateHospital, async (req, res) => {
   try {
     const hospital_id = req.hospital?.hospital_id;
     const { donor_id } = req.params;
-    const { signature_ipfs_hash, verification_tx_hash, ocr_verified, blockchain_verified } =
-      req.body;
+    const {
+      signature_ipfs_hash,
+      verification_tx_hash,
+      ocr_verified,
+      blockchain_verified,
+    } = req.body;
 
     const result = await pool.query(
       `UPDATE donors
@@ -185,11 +197,11 @@ router.patch("/:donor_id/status", authenticateHospital, async (req, res) => {
     const { status } = req.body;
 
     // Validate status value
-    const validStatuses = ['active', 'matched', 'completed', 'inactive'];
+    const validStatuses = ["active", "matched", "completed", "inactive"];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
       });
     }
 
@@ -198,7 +210,7 @@ router.patch("/:donor_id/status", authenticateHospital, async (req, res) => {
        SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE donor_id = $2 AND hospital_id = $3
        RETURNING *`,
-      [status || 'active', donor_id, hospital_id],
+      [status || "active", donor_id, hospital_id],
     );
 
     if (result.rows.length === 0) {

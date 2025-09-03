@@ -4,23 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import OrganizationLayout from "@/components/organization/OrganizationLayout";
 import { useState } from "react";
-import { 
-  FileText, 
-  Clock, 
-  Users, 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
+import {
+  FileText,
+  Clock,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  Info,
   BookOpen,
   Calendar,
   Tag,
   Lightbulb,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 
 interface PolicyTemplate {
@@ -41,15 +47,17 @@ export default function ProposePolicy() {
     priority: "medium",
     hours: 72,
     tags: [] as string[],
-    template: ""
+    template: "",
   });
-  
+
   const [currentTag, setCurrentTag] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [tx, setTx] = useState<string | null>(null);
   const [proposalId, setProposalId] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [activeTemplate, setActiveTemplate] = useState<PolicyTemplate | null>(null);
+  const [activeTemplate, setActiveTemplate] = useState<PolicyTemplate | null>(
+    null,
+  );
 
   const policyTemplates: PolicyTemplate[] = [
     {
@@ -61,8 +69,8 @@ export default function ProposePolicy() {
       suggestedParameters: {
         factors: ["urgency_level", "compatibility_score", "waiting_time"],
         age_considerations: true,
-        medical_history_weight: 0.3
-      }
+        medical_history_weight: 0.3,
+      },
     },
     {
       id: "geographic_allocation",
@@ -73,8 +81,8 @@ export default function ProposePolicy() {
       suggestedParameters: {
         local_preference: true,
         max_distance_km: 500,
-        transport_time_limit_hours: 6
-      }
+        transport_time_limit_hours: 6,
+      },
     },
     {
       id: "ai_algorithm",
@@ -85,46 +93,96 @@ export default function ProposePolicy() {
       suggestedParameters: {
         algorithm_version: "2.1",
         training_data_sources: ["medical_journals", "historical_outcomes"],
-        confidence_threshold: 0.85
-      }
-    }
+        confidence_threshold: 0.85,
+      },
+    },
   ];
 
   const categories = [
-    { value: "medical", label: "Medical", icon: "🏥", description: "Patient care and medical protocols" },
-    { value: "logistics", label: "Logistics", icon: "🚚", description: "Transportation and coordination" },
-    { value: "technology", label: "Technology", icon: "🤖", description: "AI algorithms and system updates" },
-    { value: "governance", label: "Governance", icon: "⚖️", description: "Organizational and regulatory matters" },
-    { value: "ethics", label: "Ethics", icon: "🤝", description: "Ethical guidelines and principles" },
-    { value: "data", label: "Data & Privacy", icon: "🔒", description: "Data management and privacy policies" }
+    {
+      value: "medical",
+      label: "Medical",
+      icon: "🏥",
+      description: "Patient care and medical protocols",
+    },
+    {
+      value: "logistics",
+      label: "Logistics",
+      icon: "🚚",
+      description: "Transportation and coordination",
+    },
+    {
+      value: "technology",
+      label: "Technology",
+      icon: "🤖",
+      description: "AI algorithms and system updates",
+    },
+    {
+      value: "governance",
+      label: "Governance",
+      icon: "⚖️",
+      description: "Organizational and regulatory matters",
+    },
+    {
+      value: "ethics",
+      label: "Ethics",
+      icon: "🤝",
+      description: "Ethical guidelines and principles",
+    },
+    {
+      value: "data",
+      label: "Data & Privacy",
+      icon: "🔒",
+      description: "Data management and privacy policies",
+    },
   ];
 
   const priorityLevels = [
-    { value: "low", label: "Low Priority", description: "Can wait for next cycle", color: "text-green-600" },
-    { value: "medium", label: "Medium Priority", description: "Normal review process", color: "text-blue-600" },
-    { value: "high", label: "High Priority", description: "Requires prompt attention", color: "text-orange-600" },
-    { value: "urgent", label: "Urgent", description: "Critical policy change needed", color: "text-red-600" }
+    {
+      value: "low",
+      label: "Low Priority",
+      description: "Can wait for next cycle",
+      color: "text-green-600",
+    },
+    {
+      value: "medium",
+      label: "Medium Priority",
+      description: "Normal review process",
+      color: "text-blue-600",
+    },
+    {
+      value: "high",
+      label: "High Priority",
+      description: "Requires prompt attention",
+      color: "text-orange-600",
+    },
+    {
+      value: "urgent",
+      label: "Urgent",
+      description: "Critical policy change needed",
+      color: "text-red-600",
+    },
   ];
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
     } else if (formData.title.length < 10) {
       newErrors.title = "Title must be at least 10 characters";
     }
-    
+
     if (!formData.rationale.trim()) {
       newErrors.rationale = "Rationale is required";
     } else if (formData.rationale.length < 50) {
       newErrors.rationale = "Rationale must be at least 50 characters";
     }
-    
+
     if (!formData.category) {
       newErrors.category = "Category is required";
     }
-    
+
     if (formData.parameters) {
       try {
         JSON.parse(formData.parameters);
@@ -132,49 +190,49 @@ export default function ProposePolicy() {
         newErrors.parameters = "Parameters must be valid JSON";
       }
     }
-    
+
     if (formData.hours < 24 || formData.hours > 168) {
       newErrors.hours = "Voting period must be between 24 hours and 7 days";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleTemplateSelect = (templateId: string) => {
-    const template = policyTemplates.find(t => t.id === templateId);
+    const template = policyTemplates.find((t) => t.id === templateId);
     if (template) {
       setActiveTemplate(template);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         template: templateId,
         category: template.category,
         parameters: JSON.stringify(template.suggestedParameters, null, 2),
-        hours: template.estimatedVotingTime
+        hours: template.estimatedVotingTime,
       }));
     }
   };
 
   const addTag = () => {
     if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, currentTag.trim()]
+        tags: [...prev.tags, currentTag.trim()],
       }));
       setCurrentTag("");
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
   const submit = async () => {
     if (!validateForm()) return;
-    
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem("organization_token");
@@ -191,18 +249,18 @@ export default function ProposePolicy() {
           category: formData.category,
           priority: formData.priority,
           tags: formData.tags,
-          hours: formData.hours
+          hours: formData.hours,
         }),
       });
-      
+
       const data = await response.json();
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Failed to submit proposal");
       }
-      
+
       setTx(data.txHash);
       setProposalId(data.proposalId);
-      
+
       // Reset form after successful submission
       setTimeout(() => {
         setFormData({
@@ -213,11 +271,10 @@ export default function ProposePolicy() {
           priority: "medium",
           hours: 72,
           tags: [],
-          template: ""
+          template: "",
         });
         setActiveTemplate(null);
       }, 3000);
-      
     } catch (e: any) {
       setErrors({ submit: e.message || "Failed to submit proposal" });
     } finally {
@@ -241,14 +298,17 @@ export default function ProposePolicy() {
             <AlertDescription className="text-green-800">
               <strong>Proposal submitted successfully!</strong>
               <div className="mt-2 space-y-1">
-                <div>Transaction: <a
-                  className="underline"
-                  target="_blank"
-                  href={`https://sepolia.etherscan.io/tx/${tx}`}
-                  rel="noopener noreferrer"
-                >
-                  {tx?.slice(0, 10)}...{tx?.slice(-8)}
-                </a></div>
+                <div>
+                  Transaction:{" "}
+                  <a
+                    className="underline"
+                    target="_blank"
+                    href={`https://sepolia.etherscan.io/tx/${tx}`}
+                    rel="noopener noreferrer"
+                  >
+                    {tx?.slice(0, 10)}...{tx?.slice(-8)}
+                  </a>
+                </div>
                 {proposalId && <div>Proposal ID: #{proposalId}</div>}
                 <div className="mt-2">
                   <Button size="sm" variant="outline" asChild>
@@ -270,7 +330,8 @@ export default function ProposePolicy() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Choose a template to get started with pre-configured parameters and guidelines.
+              Choose a template to get started with pre-configured parameters
+              and guidelines.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {policyTemplates.map((template) => (
@@ -278,16 +339,20 @@ export default function ProposePolicy() {
                   key={template.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-all ${
                     activeTemplate?.id === template.id
-                      ? 'border-medical-600 bg-medical-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? "border-medical-600 bg-medical-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                   onClick={() => handleTemplateSelect(template.id)}
                 >
                   <h4 className="font-medium mb-2">{template.name}</h4>
-                  <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {template.description}
+                  </p>
                   <div className="flex items-center justify-between text-xs">
                     <Badge variant="outline">{template.category}</Badge>
-                    <span className="text-gray-500">{template.estimatedVotingTime}h voting</span>
+                    <span className="text-gray-500">
+                      {template.estimatedVotingTime}h voting
+                    </span>
                   </div>
                 </div>
               ))}
@@ -312,7 +377,12 @@ export default function ProposePolicy() {
                   <Input
                     id="title"
                     value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Enhanced Pediatric Priority Protocol"
                     className={errors.title ? "border-red-300" : ""}
                   />
@@ -320,7 +390,8 @@ export default function ProposePolicy() {
                     <p className="text-sm text-red-600 mt-1">{errors.title}</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    A clear, descriptive title that explains the policy's purpose
+                    A clear, descriptive title that explains the policy's
+                    purpose
                   </p>
                 </div>
 
@@ -328,8 +399,15 @@ export default function ProposePolicy() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="category">Category *</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                      <SelectTrigger className={errors.category ? "border-red-300" : ""}>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, category: value }))
+                      }
+                    >
+                      <SelectTrigger
+                        className={errors.category ? "border-red-300" : ""}
+                      >
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -339,7 +417,9 @@ export default function ProposePolicy() {
                               <span>{cat.icon}</span>
                               <div>
                                 <div>{cat.label}</div>
-                                <div className="text-xs text-gray-500">{cat.description}</div>
+                                <div className="text-xs text-gray-500">
+                                  {cat.description}
+                                </div>
                               </div>
                             </div>
                           </SelectItem>
@@ -347,24 +427,38 @@ export default function ProposePolicy() {
                       </SelectContent>
                     </Select>
                     {errors.category && (
-                      <p className="text-sm text-red-600 mt-1">{errors.category}</p>
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.category}
+                      </p>
                     )}
                   </div>
 
                   <div>
                     <Label htmlFor="priority">Priority Level</Label>
-                    <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                    <Select
+                      value={formData.priority}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, priority: value }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
                       <SelectContent>
                         {priorityLevels.map((priority) => (
-                          <SelectItem key={priority.value} value={priority.value}>
+                          <SelectItem
+                            key={priority.value}
+                            value={priority.value}
+                          >
                             <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${priority.color.replace('text-', 'bg-')}`} />
+                              <div
+                                className={`w-2 h-2 rounded-full ${priority.color.replace("text-", "bg-")}`}
+                              />
                               <div>
                                 <div>{priority.label}</div>
-                                <div className="text-xs text-gray-500">{priority.description}</div>
+                                <div className="text-xs text-gray-500">
+                                  {priority.description}
+                                </div>
                               </div>
                             </div>
                           </SelectItem>
@@ -380,16 +474,24 @@ export default function ProposePolicy() {
                   <Textarea
                     id="rationale"
                     value={formData.rationale}
-                    onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        rationale: e.target.value,
+                      }))
+                    }
                     rows={5}
                     placeholder="Explain why this policy is needed, its expected impact, and how it will improve organ allocation..."
                     className={errors.rationale ? "border-red-300" : ""}
                   />
                   {errors.rationale && (
-                    <p className="text-sm text-red-600 mt-1">{errors.rationale}</p>
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.rationale}
+                    </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Provide a comprehensive explanation that will help other organizations understand and evaluate your proposal
+                    Provide a comprehensive explanation that will help other
+                    organizations understand and evaluate your proposal
                   </p>
                 </div>
 
@@ -402,7 +504,9 @@ export default function ProposePolicy() {
                       onChange={(e) => setCurrentTag(e.target.value)}
                       placeholder="Add tag..."
                       className="flex-1"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && (e.preventDefault(), addTag())
+                      }
                     />
                     <Button type="button" variant="outline" onClick={addTag}>
                       <Tag className="h-4 w-4" />
@@ -410,13 +514,19 @@ export default function ProposePolicy() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="cursor-pointer"
+                        onClick={() => removeTag(tag)}
+                      >
                         {tag} ×
                       </Badge>
                     ))}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Add relevant tags to help categorize and search for this policy
+                    Add relevant tags to help categorize and search for this
+                    policy
                   </p>
                 </div>
 
@@ -426,16 +536,24 @@ export default function ProposePolicy() {
                   <Textarea
                     id="parameters"
                     value={formData.parameters}
-                    onChange={(e) => setFormData(prev => ({ ...prev, parameters: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        parameters: e.target.value,
+                      }))
+                    }
                     rows={6}
                     placeholder='{"organ": "kidney", "age_priority": true, "max_waiting_time_months": 24}'
                     className={`font-mono text-sm ${errors.parameters ? "border-red-300" : ""}`}
                   />
                   {errors.parameters && (
-                    <p className="text-sm text-red-600 mt-1">{errors.parameters}</p>
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.parameters}
+                    </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Define specific parameters that will be stored on IPFS and referenced on-chain
+                    Define specific parameters that will be stored on IPFS and
+                    referenced on-chain
                   </p>
                 </div>
 
@@ -449,25 +567,34 @@ export default function ProposePolicy() {
                       min="24"
                       max="168"
                       value={formData.hours}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hours: parseInt(e.target.value) || 72 }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hours: parseInt(e.target.value) || 72,
+                        }))
+                      }
                       className={errors.hours ? "border-red-300 w-32" : "w-32"}
                     />
                     <div className="text-sm text-gray-600">
-                      ≈ {estimatedTimeToDecision} day{estimatedTimeToDecision > 1 ? 's' : ''}
+                      ≈ {estimatedTimeToDecision} day
+                      {estimatedTimeToDecision > 1 ? "s" : ""}
                     </div>
                   </div>
                   {errors.hours && (
                     <p className="text-sm text-red-600 mt-1">{errors.hours}</p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Recommended: 72-96 hours for standard policies, 24-48 hours for urgent matters
+                    Recommended: 72-96 hours for standard policies, 24-48 hours
+                    for urgent matters
                   </p>
                 </div>
 
                 {/* Submit Button */}
                 <div className="flex justify-end pt-4">
                   <Button
-                    disabled={submitting || !formData.title || !formData.rationale}
+                    disabled={
+                      submitting || !formData.title || !formData.rationale
+                    }
                     onClick={submit}
                     className="bg-medical-600 hover:bg-medical-700 min-w-[140px]"
                   >
@@ -500,20 +627,25 @@ export default function ProposePolicy() {
                     <span>{estimatedParticipants} organizations</span>
                   </div>
                 </div>
-                
+
                 <div className="text-sm">
                   <strong>Voting Period:</strong>
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="h-4 w-4 text-gray-500" />
-                    <span>{formData.hours} hours ({estimatedTimeToDecision} days)</span>
+                    <span>
+                      {formData.hours} hours ({estimatedTimeToDecision} days)
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="text-sm">
                   <strong>Required for Passage:</strong>
                   <div className="flex items-center gap-2 mt-1">
                     <CheckCircle className="h-4 w-4 text-gray-500" />
-                    <span>≥50% approval ({Math.ceil(estimatedParticipants * 0.5)} votes)</span>
+                    <span>
+                      ≥50% approval ({Math.ceil(estimatedParticipants * 0.5)}{" "}
+                      votes)
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -531,28 +663,32 @@ export default function ProposePolicy() {
                 <div className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                   <div>
-                    <strong>Clear Title:</strong> Make it descriptive and specific
+                    <strong>Clear Title:</strong> Make it descriptive and
+                    specific
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                   <div>
-                    <strong>Detailed Rationale:</strong> Explain the problem and solution
+                    <strong>Detailed Rationale:</strong> Explain the problem and
+                    solution
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                   <div>
-                    <strong>Realistic Timeline:</strong> Allow adequate voting time
+                    <strong>Realistic Timeline:</strong> Allow adequate voting
+                    time
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                   <div>
-                    <strong>Valid JSON:</strong> Test parameters before submission
+                    <strong>Valid JSON:</strong> Test parameters before
+                    submission
                   </div>
                 </div>
               </CardContent>
@@ -567,15 +703,27 @@ export default function ProposePolicy() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Policy Guidelines
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Examples
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Contact Support
                 </Button>

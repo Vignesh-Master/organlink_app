@@ -6,14 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OrganizationLayout from "@/components/organization/OrganizationLayout";
 import { useState, useEffect } from "react";
-import { 
-  FileText, 
-  Vote, 
-  BarChart3, 
-  History, 
-  TrendingUp, 
-  Users, 
-  Clock, 
+import {
+  FileText,
+  Vote,
+  BarChart3,
+  History,
+  TrendingUp,
+  Users,
+  Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -22,7 +22,7 @@ import {
   Calendar,
   Target,
   Award,
-  Activity
+  Activity,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -36,7 +36,7 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: string;
-  type: 'proposal' | 'vote' | 'finalized';
+  type: "proposal" | "vote" | "finalized";
   title: string;
   description: string;
   timestamp: string;
@@ -67,11 +67,13 @@ export default function OrganizationDashboard() {
     approvedPolicies: 0,
     rejectedPolicies: 0,
     myVotes: 0,
-    participationRate: 0
+    participationRate: 0,
   });
-  
+
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<
+    UpcomingDeadline[]
+  >([]);
   const [orgInfo, setOrgInfo] = useState<OrganizationInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,10 +84,10 @@ export default function OrganizationDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // In a real implementation, these would be separate API calls
       // For now, we'll use mock data that demonstrates the functionality
-      
+
       // Mock organization info
       setOrgInfo({
         id: 1,
@@ -93,7 +95,7 @@ export default function OrganizationDashboard() {
         email: "who@organlink.org",
         activeMembers: 150,
         totalPoliciesProposed: 12,
-        successRate: 75
+        successRate: 75,
       });
 
       // Mock dashboard stats
@@ -103,7 +105,7 @@ export default function OrganizationDashboard() {
         approvedPolicies: 18,
         rejectedPolicies: 3,
         myVotes: 21,
-        participationRate: 87.5
+        participationRate: 87.5,
       });
 
       // Mock recent activity
@@ -112,41 +114,46 @@ export default function OrganizationDashboard() {
           id: "1",
           type: "proposal",
           title: "New Pediatric Priority Policy Proposed",
-          description: "Your organization proposed a new policy for pediatric organ allocation",
-          timestamp: "2024-01-22T10:30:00Z"
+          description:
+            "Your organization proposed a new policy for pediatric organ allocation",
+          timestamp: "2024-01-22T10:30:00Z",
         },
         {
           id: "2",
           type: "vote",
           title: "Voted on Geographic Proximity Rule",
-          description: "You voted 'For' on the geographic proximity preference policy",
+          description:
+            "You voted 'For' on the geographic proximity preference policy",
           timestamp: "2024-01-21T15:45:00Z",
-          status: "for"
+          status: "for",
         },
         {
           id: "3",
           type: "finalized",
           title: "AI Matching Enhancement - Rejected",
-          description: "The AI matching algorithm update proposal was rejected with 3-7 votes",
+          description:
+            "The AI matching algorithm update proposal was rejected with 3-7 votes",
           timestamp: "2024-01-20T09:15:00Z",
-          status: "rejected"
+          status: "rejected",
         },
         {
           id: "4",
           type: "finalized",
           title: "Emergency Protocol Update - Approved",
-          description: "The emergency organ allocation protocol was approved with 9-2 votes",
+          description:
+            "The emergency organ allocation protocol was approved with 9-2 votes",
           timestamp: "2024-01-19T14:22:00Z",
-          status: "approved"
+          status: "approved",
         },
         {
           id: "5",
           type: "vote",
           title: "Voted on Cross-Border Allocation",
-          description: "You voted 'Against' on the international organ sharing policy",
+          description:
+            "You voted 'Against' on the international organ sharing policy",
           timestamp: "2024-01-18T11:30:00Z",
-          status: "against"
-        }
+          status: "against",
+        },
       ]);
 
       // Mock upcoming deadlines
@@ -156,24 +163,23 @@ export default function OrganizationDashboard() {
           title: "Geographic Proximity Preference",
           endTime: "2024-01-25T14:30:00Z",
           hoursLeft: 28,
-          canVote: true
+          canVote: true,
         },
         {
           id: 4,
           title: "Cross-Border Allocation Framework",
           endTime: "2024-01-26T16:00:00Z",
           hoursLeft: 42,
-          canVote: true
+          canVote: true,
         },
         {
           id: 5,
           title: "Donor Consent Verification Protocol",
           endTime: "2024-01-28T12:00:00Z",
           hoursLeft: 86,
-          canVote: false
-        }
+          canVote: false,
+        },
       ]);
-
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
@@ -217,9 +223,9 @@ export default function OrganizationDashboard() {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
     } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     } else {
       return "Just now";
     }
@@ -242,7 +248,10 @@ export default function OrganizationDashboard() {
   }
 
   return (
-    <OrganizationLayout title="Organization Dashboard" subtitle="Monitor your policy governance activities">
+    <OrganizationLayout
+      title="Organization Dashboard"
+      subtitle="Monitor your policy governance activities"
+    >
       <div className="space-y-6">
         {/* Organization Overview */}
         {orgInfo && (
@@ -256,19 +265,27 @@ export default function OrganizationDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-medical-600">{orgInfo.activeMembers}</p>
+                  <p className="text-2xl font-bold text-medical-600">
+                    {orgInfo.activeMembers}
+                  </p>
                   <p className="text-sm text-gray-600">Active Members</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{orgInfo.totalPoliciesProposed}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {orgInfo.totalPoliciesProposed}
+                  </p>
                   <p className="text-sm text-gray-600">Policies Proposed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">{orgInfo.successRate}%</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {orgInfo.successRate}%
+                  </p>
                   <p className="text-sm text-gray-600">Success Rate</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-600">{stats.participationRate}%</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {stats.participationRate}%
+                  </p>
                   <p className="text-sm text-gray-600">Participation Rate</p>
                 </div>
               </div>
@@ -281,11 +298,15 @@ export default function OrganizationDashboard() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-gray-700">Total Proposals</span>
+                <span className="font-medium text-gray-700">
+                  Total Proposals
+                </span>
                 <FileText className="h-5 w-5 text-medical-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold">{stats.totalProposals}</span>
+                <span className="text-2xl font-bold">
+                  {stats.totalProposals}
+                </span>
                 <Button variant="outline" size="sm" asChild>
                   <a href="/organization/policies">View All</a>
                 </Button>
@@ -300,7 +321,9 @@ export default function OrganizationDashboard() {
                 <Vote className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold text-blue-600">{stats.activeVotes}</span>
+                <span className="text-2xl font-bold text-blue-600">
+                  {stats.activeVotes}
+                </span>
                 <Button size="sm" asChild>
                   <a href="/organization/policies/vote">Vote Now</a>
                 </Button>
@@ -315,9 +338,14 @@ export default function OrganizationDashboard() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold text-green-600">{stats.approvedPolicies}</span>
+                <span className="text-2xl font-bold text-green-600">
+                  {stats.approvedPolicies}
+                </span>
                 <span className="text-sm text-gray-500">
-                  {Math.round((stats.approvedPolicies / stats.totalProposals) * 100)}%
+                  {Math.round(
+                    (stats.approvedPolicies / stats.totalProposals) * 100,
+                  )}
+                  %
                 </span>
               </div>
             </CardContent>
@@ -330,7 +358,9 @@ export default function OrganizationDashboard() {
                 <Target className="h-5 w-5 text-purple-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold text-purple-600">{stats.myVotes}</span>
+                <span className="text-2xl font-bold text-purple-600">
+                  {stats.myVotes}
+                </span>
                 <span className="text-sm text-gray-500">
                   of {stats.totalProposals}
                 </span>
@@ -346,8 +376,14 @@ export default function OrganizationDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Button className="h-16 bg-medical-600 hover:bg-medical-700" asChild>
-                <a href="/organization/policies/propose" className="flex flex-col">
+              <Button
+                className="h-16 bg-medical-600 hover:bg-medical-700"
+                asChild
+              >
+                <a
+                  href="/organization/policies/propose"
+                  className="flex flex-col"
+                >
                   <PlusCircle className="h-6 w-6 mb-1" />
                   Propose Policy
                 </a>
@@ -386,22 +422,28 @@ export default function OrganizationDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {upcomingDeadlines.map((deadline) => (
-                  <div key={deadline.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={deadline.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="flex-1">
                       <h4 className="font-medium">{deadline.title}</h4>
-                      <p className={`text-sm font-medium ${getUrgencyColor(deadline.hoursLeft)}`}>
-                        {deadline.hoursLeft <= 24 
-                          ? `${deadline.hoursLeft} hours left` 
-                          : `${Math.floor(deadline.hoursLeft / 24)} days left`
-                        }
+                      <p
+                        className={`text-sm font-medium ${getUrgencyColor(deadline.hoursLeft)}`}
+                      >
+                        {deadline.hoursLeft <= 24
+                          ? `${deadline.hoursLeft} hours left`
+                          : `${Math.floor(deadline.hoursLeft / 24)} days left`}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {deadline.canVote ? (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="bg-medical-600 hover:bg-medical-700"
-                          onClick={() => window.location.href = `/organization/policies/vote?id=${deadline.id}`}
+                          onClick={() =>
+                            (window.location.href = `/organization/policies/vote?id=${deadline.id}`)
+                          }
                         >
                           Vote Now
                         </Button>
@@ -429,15 +471,24 @@ export default function OrganizationDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {recentActivity.slice(0, 5).map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
                     {getActivityIcon(activity.type)}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium text-sm">{activity.title}</h4>
+                        <h4 className="font-medium text-sm">
+                          {activity.title}
+                        </h4>
                         {getStatusBadge(activity.status)}
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{activity.description}</p>
-                      <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
+                      <p className="text-xs text-gray-600 mb-1">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatTimeAgo(activity.timestamp)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -463,7 +514,9 @@ export default function OrganizationDashboard() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">Voting Participation</span>
-                  <span className="text-sm font-semibold">{stats.participationRate}%</span>
+                  <span className="text-sm font-semibold">
+                    {stats.participationRate}%
+                  </span>
                 </div>
                 <Progress value={stats.participationRate} className="h-2" />
                 <p className="text-xs text-gray-600 mt-1">
@@ -475,11 +528,14 @@ export default function OrganizationDashboard() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">Proposal Success Rate</span>
-                  <span className="text-sm font-semibold">{orgInfo?.successRate}%</span>
+                  <span className="text-sm font-semibold">
+                    {orgInfo?.successRate}%
+                  </span>
                 </div>
                 <Progress value={orgInfo?.successRate || 0} className="h-2" />
                 <p className="text-xs text-gray-600 mt-1">
-                  {stats.approvedPolicies} approved out of {orgInfo?.totalPoliciesProposed} proposed
+                  {stats.approvedPolicies} approved out of{" "}
+                  {orgInfo?.totalPoliciesProposed} proposed
                 </p>
               </div>
 
@@ -502,8 +558,9 @@ export default function OrganizationDashboard() {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Reminder:</strong> The quarterly policy review meeting is scheduled for next week. 
-            Please ensure all pending votes are cast before the deadline.
+            <strong>Reminder:</strong> The quarterly policy review meeting is
+            scheduled for next week. Please ensure all pending votes are cast
+            before the deadline.
           </AlertDescription>
         </Alert>
       </div>
