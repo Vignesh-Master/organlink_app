@@ -24,6 +24,7 @@ import adminBlockchainRoutes from "./routes/admin-blockchain";
 import organizationAuthRoutes from "./routes/organization-auth";
 import organizationPoliciesRoutes from "./routes/organization-policies";
 import testBlockchainRoutes from "./routes/test-blockchain";
+import testIpfsRoutes from "./routes/test-ipfs";
 
 export function createServer() {
   const app = express();
