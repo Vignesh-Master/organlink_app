@@ -18,7 +18,7 @@ export class NotificationService {
       const notificationId = `NOTIF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       await pool.query(
-        `INSERT INTO notifications (notification_id, hospital_id, type, title, message, related_id, created_at, updated_at, is_read)
+        `INSERT INTO notifications (notification_id, hospital_id, type, title, message, related_id, created_at, updated_at, read)
          VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false)`,
         [notificationId, data.hospital_id, data.type, data.title, data.message, data.related_id || null]
       );
