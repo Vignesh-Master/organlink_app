@@ -143,18 +143,19 @@ router.post(
     try {
       const hospital_id = req.hospital?.hospital_id;
       const { patient_id } = req.params;
-      const { signature_ipfs_hash, blockchain_tx_hash, signature_verified } =
+      const { signature_ipfs_hash, verification_tx_hash, ocr_verified, blockchain_verified } =
         req.body;
 
       const result = await pool.query(
         `UPDATE patients
-       SET signature_ipfs_hash = $1, blockchain_tx_hash = $2, signature_verified = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE patient_id = $4 AND hospital_id = $5
+       SET signature_ipfs_hash = $1, verification_tx_hash = $2, ocr_verified = $3, blockchain_verified = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE patient_id = $5 AND hospital_id = $6
        RETURNING *`,
         [
           signature_ipfs_hash,
-          blockchain_tx_hash || null,
-          signature_verified || false,
+          verification_tx_hash || null,
+          ocr_verified || false,
+          blockchain_verified || false,
           patient_id,
           hospital_id,
         ],
