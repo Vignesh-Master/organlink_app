@@ -1,282 +1,208 @@
-import Tesseract from "tesseract.js";
-import sharp from "sharp";
+import Tesseract from 'tesseract.js';
+import { createHash } from 'crypto';
+
+export interface OCRResult {
+  text: string;
+  confidence: number;
+  confidenceScore: number; // 0-10000 basis points
+  verified: boolean;
+  metadata: {
+    processingTime: number;
+    blocks: any[];
+    symbols: any[];
+  };
+}
+
+export interface SignatureVerificationResult {
+  isSignature: boolean;
+  confidence: number;
+  features: {
+    hasHandwriting: boolean;
+    hasSignatureLikeStrokes: boolean;
+    textLength: number;
+    confidenceThreshold: number;
+  };
+}
 
 export class OCRService {
-  // Process image and extract text
-  async extractText(imageBuffer: Buffer): Promise<string> {
-    try {
-      // Preprocess image for better OCR results
-      const processedImage = await this.preprocessImage(imageBuffer);
+  private worker: Tesseract.Worker | null = null;
 
-      // Perform OCR
-      const result = await Tesseract.recognize(processedImage, "eng", {
-        logger: (m) => console.log(m),
-      });
-
-      return result.data.text.trim();
-    } catch (error) {
-      console.error("OCR text extraction error:", error);
-      throw new Error("Failed to extract text from image");
-    }
-  }
-
-  // Preprocess image for better OCR accuracy (with optional rotation)
-  private async preprocessImage(
-    imageBuffer: Buffer,
-    rotateDeg: number = 0,
-  ): Promise<Buffer> {
-    try {
-      const img = sharp(imageBuffer);
-      const meta = await img.metadata();
-      const targetWidth = Math.max(meta.width || 0, 1600);
-      return await img
-        .rotate(rotateDeg)
-        .resize({ width: targetWidth, withoutEnlargement: false })
-        .greyscale()
-        .normalize()
-        .sharpen()
-        .toFormat("png")
-        .toBuffer();
-    } catch (error) {
-      console.error("Image preprocessing error:", error);
-      return imageBuffer; // Return original if preprocessing fails
-    }
-  }
-
-  // Verify signature document
-  async verifySignatureDocument(imageBuffer: Buffer): Promise<{
-    isValid: boolean;
-    extractedText: string;
-    confidence: number;
-    keywords: string[];
-  }> {
-    try {
-      // Extract text from the signature document
-      const processed = await this.preprocessImage(imageBuffer);
-      const result = await Tesseract.recognize(processed, "eng", {
-        logger: (m) => console.log(m),
-      });
-
-      const extractedText = result.data.text.trim().toLowerCase();
-      const confidence = result.data.confidence;
-
-      // Keywords that might indicate a valid signature document
-      const validKeywords = [
-        "signature",
-        "consent",
-        "agreement",
-        "donor",
-        "patient",
-        "organ",
-        "authorization",
-        "medical",
-        "hospital",
-        "date",
-        "name",
-        "signed",
-      ];
-
-      // Check for presence of keywords
-      const foundKeywords = validKeywords.filter((keyword) =>
-        extractedText.includes(keyword),
-      );
-
-      // Basic validation criteria
-      const hasMinimumLength = extractedText.length > 10;
-      const hasKeywords = foundKeywords.length >= 2;
-      const hasGoodConfidence = confidence > 50;
-
-      const isValid = hasMinimumLength && hasKeywords && hasGoodConfidence;
-
-      return {
-        isValid,
-        extractedText: result.data.text.trim(),
-        confidence,
-        keywords: foundKeywords,
-      };
-    } catch (error) {
-      console.error("Signature verification error:", error);
-      return {
-        isValid: false,
-        extractedText: "",
-        confidence: 0,
-        keywords: [],
-      };
-    }
-  }
-
-  // Advanced signature verification with pattern matching
-  async advancedSignatureVerification(
-    imageBuffer: Buffer,
-    expectedPatientName?: string,
-  ): Promise<{
-    isValid: boolean;
-    extractedText: string;
-    confidence: number;
-    matchedPatterns: string[];
-    nameMatch: boolean;
-  }> {
-    try {
-      // Try multiple orientations (handles vertical signatures)
-      const angles = [0, 90, 180, 270];
-      let best = { text: "", confidence: 0 };
-      for (const angle of angles) {
-        const processed = await this.preprocessImage(imageBuffer, angle);
-        const res = await Tesseract.recognize(processed, "eng", {
-          logger: (m) => console.log(m),
-        });
-        const conf = Number(res.data.confidence || 0);
-        if (conf > best.confidence)
-          best = { text: res.data.text.trim(), confidence: conf };
-      }
-
-      const extractedText = best.text;
-      const normalizedText = extractedText.toLowerCase();
-
-      // Signature document patterns
-      const patterns = [
-        /consent.*organ.*donation/i,
-        /authorization.*medical.*treatment/i,
-        /patient.*signature/i,
-        /donor.*agreement/i,
-        /medical.*consent/i,
-        /organ.*transplant.*consent/i,
-        /signature.*date/i,
-        /\d{1,2}\/\d{1,2}\/\d{2,4}/i, // Date patterns
-        /signed.*by/i,
-      ];
-
-      const matchedPatterns = patterns
-        .filter((pattern) => pattern.test(extractedText))
-        .map((pattern) => pattern.toString());
-
-      // Check if expected patient name is found (robust matching with typos)
-      let nameMatch = false;
-      if (expectedPatientName) {
-        const sanitize = (s: string) =>
-          s.toLowerCase().replace(/[^a-z0-9]+/g, "");
-        const textSan = sanitize(normalizedText);
-        const expSan = sanitize(expectedPatientName);
-
-        // token presence
-        const parts = expectedPatientName
-          .toLowerCase()
-          .split(/\s+/)
-          .filter(Boolean);
-        const partsMatch =
-          parts.filter((p) => p.length > 2 && textSan.includes(sanitize(p)))
-            .length >= Math.min(2, parts.length);
-        const wholeMatch = expSan.length > 3 && textSan.includes(expSan);
-
-        // trigram similarity
-        const trigrams = (s: string) => new Set(s.match(/.{1,3}/g) || []);
-        const A = trigrams(expSan);
-        const B = trigrams(textSan);
-        const inter = [...A].filter((x) => B.has(x)).length;
-        const sim = A.size ? inter / A.size : 0;
-
-        // Levenshtein distance (allow small typos like Doe vs Dot)
-        const levenshtein = (a: string, b: string) => {
-          const m = a.length,
-            n = b.length;
-          const dp = Array.from({ length: m + 1 }, () =>
-            new Array(n + 1).fill(0),
-          );
-          for (let i = 0; i <= m; i++) dp[i][0] = i;
-          for (let j = 0; j <= n; j++) dp[0][j] = j;
-          for (let i = 1; i <= m; i++) {
-            for (let j = 1; j <= n; j++) {
-              const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-              dp[i][j] = Math.min(
-                dp[i - 1][j] + 1,
-                dp[i][j - 1] + 1,
-                dp[i - 1][j - 1] + cost,
-              );
-            }
+  async initialize(): Promise<void> {
+    if (!this.worker) {
+      this.worker = await Tesseract.createWorker('eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
-          return dp[m][n];
-        };
-
-        const tokens = Array.from(
-          new Set(textSan.split(/[^a-z0-9]+/).filter(Boolean)),
-        );
-        const lastName = sanitize(parts[parts.length - 1] || "");
-        const anyTokenClose = tokens.some((t) => {
-          const distLast = lastName ? levenshtein(lastName, t) : 99;
-          const distFull = levenshtein(expSan, t);
-          return distLast <= 1 || distFull <= 2;
-        });
-
-        nameMatch = wholeMatch || partsMatch || sim >= 0.35 || anyTokenClose;
-      }
-
-      // Advanced validation criteria
-      const hasPatterns = matchedPatterns.length >= 1;
-      const hasMinimumLength = extractedText.length > 10;
-      const hasGoodConfidence = best.confidence > 40;
-
-      const isValid = hasPatterns && hasMinimumLength && hasGoodConfidence;
-
-      return {
-        isValid,
-        extractedText,
-        confidence: best.confidence,
-        matchedPatterns,
-        nameMatch,
-      };
-    } catch (error) {
-      console.error("Advanced signature verification error:", error);
-      return {
-        isValid: false,
-        extractedText: "",
-        confidence: 0,
-        matchedPatterns: [],
-        nameMatch: false,
-      };
+        }
+      });
     }
   }
 
-  // Extract specific fields from medical documents
-  async extractMedicalFields(imageBuffer: Buffer): Promise<{
-    patientName?: string;
-    date?: string;
-    hospitalName?: string;
-    signature?: boolean;
-    organType?: string;
-  }> {
+  async processImage(imageBuffer: Buffer): Promise<OCRResult> {
+    const startTime = Date.now();
+    
     try {
-      const processed = await this.preprocessImage(imageBuffer);
-      const result = await Tesseract.recognize(processed, "eng", {
-        logger: (m) => console.log(m),
-      });
+      await this.initialize();
+      
+      if (!this.worker) {
+        throw new Error('OCR worker not initialized');
+      }
 
-      const text = result.data.text;
+      const { data } = await this.worker.recognize(imageBuffer);
+      const processingTime = Date.now() - startTime;
 
-      // Extract potential fields using regex patterns
-      const datePattern = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/;
-      const namePattern = /name[:\s]*([a-z\s]+)/i;
-      const hospitalPattern = /hospital[:\s]*([a-z\s]+)/i;
-      const organPattern = /(kidney|liver|heart|lung|pancreas|cornea)/i;
-
-      const dateMatch = text.match(datePattern);
-      const nameMatch = text.match(namePattern);
-      const hospitalMatch = text.match(hospitalPattern);
-      const organMatch = text.match(organPattern);
+      // Calculate confidence score in basis points (0-10000)
+      const confidenceScore = Math.round(data.confidence * 100);
+      
+      // Determine if the text is verified based on confidence
+      const verified = data.confidence >= 0.7; // 70% threshold
 
       return {
-        patientName: nameMatch ? nameMatch[1].trim() : undefined,
-        date: dateMatch ? dateMatch[1] : undefined,
-        hospitalName: hospitalMatch ? hospitalMatch[1].trim() : undefined,
-        signature:
-          text.toLowerCase().includes("signature") ||
-          text.toLowerCase().includes("signed"),
-        organType: organMatch ? organMatch[1].toLowerCase() : undefined,
+        text: data.text.trim(),
+        confidence: data.confidence,
+        confidenceScore,
+        verified,
+        metadata: {
+          processingTime,
+          blocks: data.blocks || [],
+          symbols: data.symbols || []
+        }
       };
     } catch (error) {
-      console.error("Medical field extraction error:", error);
-      return {};
+      console.error('OCR processing error:', error);
+      throw new Error(`OCR processing failed: ${error}`);
+    }
+  }
+
+  async verifySignature(imageBuffer: Buffer, expectedSignature?: string): Promise<SignatureVerificationResult> {
+    try {
+      const ocrResult = await this.processImage(imageBuffer);
+      
+      // Analyze the OCR result to determine if it's a signature
+      const features = this.analyzeSignatureFeatures(ocrResult);
+      
+      let confidence = 0;
+      
+      // Base confidence on OCR confidence and signature-like features
+      if (features.hasHandwriting) confidence += 0.3;
+      if (features.hasSignatureLikeStrokes) confidence += 0.4;
+      if (ocrResult.confidence > 0.5) confidence += 0.2;
+      if (features.textLength > 2 && features.textLength < 50) confidence += 0.1;
+      
+      // If expected signature is provided, compare similarity
+      if (expectedSignature && ocrResult.text) {
+        const similarity = this.calculateTextSimilarity(
+          ocrResult.text.toLowerCase(),
+          expectedSignature.toLowerCase()
+        );
+        confidence = Math.max(confidence, similarity);
+      }
+      
+      const isSignature = confidence >= features.confidenceThreshold;
+      
+      return {
+        isSignature,
+        confidence,
+        features
+      };
+    } catch (error) {
+      console.error('Signature verification error:', error);
+      throw new Error(`Signature verification failed: ${error}`);
+    }
+  }
+
+  private analyzeSignatureFeatures(ocrResult: OCRResult): SignatureVerificationResult['features'] {
+    const text = ocrResult.text;
+    const textLength = text.length;
+    
+    // Simple heuristics to detect signature-like content
+    const hasHandwriting = textLength > 0 && textLength < 100;
+    
+    // Check for signature-like patterns (name-like text, single words, etc.)
+    const words = text.split(/\s+/).filter(w => w.length > 0);
+    const hasSignatureLikeStrokes = words.length >= 1 && words.length <= 4 && 
+      words.some(word => /^[A-Za-z]+$/.test(word) && word.length >= 2);
+    
+    // Confidence threshold for signature detection
+    const confidenceThreshold = 0.6;
+    
+    return {
+      hasHandwriting,
+      hasSignatureLikeStrokes,
+      textLength,
+      confidenceThreshold
+    };
+  }
+
+  private calculateTextSimilarity(text1: string, text2: string): number {
+    if (!text1 || !text2) return 0;
+    
+    // Simple Levenshtein distance-based similarity
+    const distance = this.levenshteinDistance(text1, text2);
+    const maxLength = Math.max(text1.length, text2.length);
+    
+    if (maxLength === 0) return 1;
+    
+    return 1 - (distance / maxLength);
+  }
+
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  async generateDocumentHash(content: Buffer | string): Promise<string> {
+    const hash = createHash('sha256');
+    hash.update(content);
+    return '0x' + hash.digest('hex');
+  }
+
+  async cleanup(): Promise<void> {
+    if (this.worker) {
+      await this.worker.terminate();
+      this.worker = null;
     }
   }
 }
 
+// Singleton instance
 export const ocrService = new OCRService();
+
+// Cleanup on process exit
+process.on('exit', () => {
+  ocrService.cleanup();
+});
+
+process.on('SIGINT', () => {
+  ocrService.cleanup();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  ocrService.cleanup();
+  process.exit(0);
+});
