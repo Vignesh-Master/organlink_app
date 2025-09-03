@@ -191,8 +191,8 @@ router.patch(
       const { notification_id } = req.params;
 
       await pool.query(
-        `UPDATE notifications 
-       SET is_read = true 
+        `UPDATE notifications
+       SET read = true
        WHERE notification_id = $1 AND hospital_id = $2`,
         [notification_id, hospital_id],
       );
