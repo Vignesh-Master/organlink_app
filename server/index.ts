@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import csrf from "csurf";
 import cookieParser from "cookie-parser";
+import { initializeDatabase, checkDatabaseConnection, createDefaultAdminIfNotExists } from "./config/init-db.js";
 import { handleDemo } from "./routes/demo";
 import adminAuthRoutes from "./routes/admin-auth";
 import hospitalRoutes from "./routes/hospitals";
