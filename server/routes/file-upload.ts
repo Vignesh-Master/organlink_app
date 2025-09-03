@@ -222,15 +222,15 @@ router.post("/blockchain-register", authenticateHospital, async (req, res) => {
     // Update record with tx hash and verification flag
     if (record_type === "patient") {
       await pool.query(
-        `UPDATE patients SET blockchain_tx_hash = $1, signature_verified = $2, updated_at = CURRENT_TIMESTAMP
-         WHERE patient_id = $3 AND hospital_id = $4`,
-        [blockchainTxHash, isVerified, record_id, hospital_id],
+        `UPDATE patients SET verification_tx_hash = $1, ocr_verified = $2, blockchain_verified = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE patient_id = $4 AND hospital_id = $5`,
+        [blockchainTxHash, isVerified, true, record_id, hospital_id],
       );
     } else if (record_type === "donor") {
       await pool.query(
-        `UPDATE donors SET blockchain_tx_hash = $1, signature_verified = $2, updated_at = CURRENT_TIMESTAMP
-         WHERE donor_id = $3 AND hospital_id = $4`,
-        [blockchainTxHash, isVerified, record_id, hospital_id],
+        `UPDATE donors SET verification_tx_hash = $1, ocr_verified = $2, blockchain_verified = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE donor_id = $4 AND hospital_id = $5`,
+        [blockchainTxHash, isVerified, true, record_id, hospital_id],
       );
     }
 
