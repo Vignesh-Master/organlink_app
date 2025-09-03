@@ -78,21 +78,39 @@ router.post("/register", authenticateHospital, async (req, res) => {
       emergency_phone,
     } = req.body;
 
+    // Validate required fields
+    if (!full_name || !age || !gender || !blood_type || !organ_needed) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: full_name, age, gender, blood_type, and organ_needed are required",
+      });
+    }
+
+    // Split full_name into first_name and last_name
+    const nameParts = full_name.trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Calculate approximate date_of_birth from age
+    const currentDate = new Date();
+    const birthYear = currentDate.getFullYear() - parseInt(age.toString());
+    const date_of_birth = `${birthYear}-01-01`; // Use January 1st as default
+
     // Generate unique patient ID
     const patient_id = `PAT_${hospital_id}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
     const result = await pool.query(
       `INSERT INTO patients (
-        patient_id, hospital_id, full_name, age, gender, blood_type, 
-        organ_needed, urgency_level, medical_condition, contact_phone, 
-        contact_email, emergency_contact, emergency_phone
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        patient_id, hospital_id, first_name, last_name, date_of_birth, gender, blood_type,
+        organ_needed, urgency_level, medical_condition, phone, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *`,
       [
         patient_id,
         hospital_id,
-        full_name,
-        age,
+        first_name,
+        last_name,
+        date_of_birth,
         gender,
         blood_type,
         organ_needed,
@@ -100,8 +118,6 @@ router.post("/register", authenticateHospital, async (req, res) => {
         medical_condition,
         contact_phone,
         contact_email,
-        emergency_contact,
-        emergency_phone,
       ],
     );
 
@@ -114,7 +130,7 @@ router.post("/register", authenticateHospital, async (req, res) => {
     console.error("Error registering patient:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to register patient",
+      error: `Failed to register patient: ${error.message}`,
     });
   }
 });
