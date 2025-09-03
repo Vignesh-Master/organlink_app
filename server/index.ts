@@ -77,6 +77,9 @@ export function createServer() {
   app.use("/api/hospital/notifications", hospitalNotificationsRoutes);
   app.use("/api/hospital/cleanup", hospitalCleanupRoutes);
 
+  // Test routes for development
+  app.use("/api/test/blockchain", testBlockchainRoutes);
+
   return app;
 }
 
