@@ -78,3 +78,33 @@ export function createServer() {
 
   return app;
 }
+
+// Initialize database on server startup
+async function startServer() {
+  try {
+    console.log('🚀 Starting OrganLink server...');
+
+    // Check database connection
+    const dbConnected = await checkDatabaseConnection();
+    if (!dbConnected) {
+      console.error('❌ Cannot connect to database. Please check your DATABASE_URL environment variable.');
+      process.exit(1);
+    }
+
+    // Initialize database schema
+    await initializeDatabase();
+
+    // Create default admin if needed
+    await createDefaultAdminIfNotExists();
+
+    console.log('✅ OrganLink server initialized successfully');
+    console.log('📖 Ready to serve requests...');
+
+  } catch (error) {
+    console.error('❌ Server initialization failed:', error);
+    process.exit(1);
+  }
+}
+
+// Initialize when module is imported
+startServer().catch(console.error);
