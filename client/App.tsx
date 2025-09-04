@@ -135,6 +135,10 @@ const App = () => (
                       path="/organization/help"
                       element={<OrganizationHelp />}
                     />
+                    <Route
+                      path="/organization/history"
+                      element={<OrganizationHistory />}
+                    />
 
                     {/* Admin Routes */}
                     <Route
