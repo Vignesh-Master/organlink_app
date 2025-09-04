@@ -74,6 +74,13 @@ export default function OrganizationSettings() {
   const [showPassword, setShowPassword] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Export and password change modals
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState(false);
+  const [passwordChangeReason, setPasswordChangeReason] = useState("");
+
+  const { submitExportRequest, submitPasswordChangeRequest, addNotification } = useSystemNotifications();
+
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotifications: true,
     smsNotifications: false,
