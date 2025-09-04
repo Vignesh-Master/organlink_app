@@ -837,6 +837,74 @@ export default function OrganizationSettings() {
             )}
           </div>
         </div>
+
+        {/* Export Data Modal */}
+        <ExportModal
+          isOpen={exportModalOpen}
+          onClose={() => setExportModalOpen(false)}
+          onExport={handleExportData}
+          title="Export Organization Data"
+          description="Export your organization's settings, policies, and activity data"
+          dataType="organization_settings"
+          requiresApproval={true}
+          showDateRange={true}
+          availableFormats={["pdf", "excel", "csv", "json"]}
+        />
+
+        {/* Password Change Request Dialog */}
+        <Dialog open={passwordChangeModalOpen} onOpenChange={setPasswordChangeModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-medical-600" />
+                Request Password Change
+              </DialogTitle>
+              <DialogDescription>
+                Password changes require admin approval for security. Please provide a reason for this request.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="reason">Reason for password change</Label>
+                <Textarea
+                  id="reason"
+                  placeholder="e.g., Security concern, forgot password, etc."
+                  value={passwordChangeReason}
+                  onChange={(e) => setPasswordChangeReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <Alert className="border-blue-200 bg-blue-50">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  An admin will review your request and provide a temporary password via email if approved.
+                </AlertDescription>
+              </Alert>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPasswordChangeModalOpen(false);
+                  setPasswordChangeReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handlePasswordChangeRequest}
+                disabled={!passwordChangeReason.trim()}
+                className="bg-medical-600 hover:bg-medical-700"
+              >
+                <Key className="h-4 w-4 mr-2" />
+                Submit Request
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </OrganizationLayout>
   );
