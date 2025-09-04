@@ -1,0 +1,137 @@
+{
+  "KID": {
+    "is_active": true,
+    "weights": {
+      "w_blood": 0.25,
+      "w_hla": 0.30,
+      "w_urgency": 0.20,
+      "w_distance": 0.10,
+      "w_age": 0.05,
+      "w_weight": 0.05,
+      "w_verification": 0.05
+    },
+    "constraints": {
+      "max_distance_km": 2000,
+      "require_abo_compat": true,
+      "use_rh_factor": true,
+      "pediatric_priority": true,
+      "require_blockchain_verification": true,
+      "min_ocr_score_bps": 8000,
+      "max_age_difference": 15,
+      "max_weight_difference_percent": 30
+    },
+    "thresholds": {
+      "min_match_score": 0.60,
+      "min_confidence": 0.55,
+      "critical_urgency_threshold": 90
+    }
+  },
+  "LIV": {
+    "is_active": true,
+    "weights": {
+      "w_blood": 0.30,
+      "w_hla": 0.15,
+      "w_urgency": 0.30,
+      "w_distance": 0.15,
+      "w_age": 0.05,
+      "w_weight": 0.05,
+      "w_verification": 0.00
+    },
+    "constraints": {
+      "max_distance_km": 1500,
+      "require_abo_compat": true,
+      "use_rh_factor": false,
+      "pediatric_priority": true,
+      "require_blockchain_verification": false,
+      "min_ocr_score_bps": 7000,
+      "max_age_difference": 20,
+      "max_weight_difference_percent": 40
+    },
+    "thresholds": {
+      "min_match_score": 0.65,
+      "min_confidence": 0.60,
+      "critical_urgency_threshold": 95
+    }
+  },
+  "HRT": {
+    "is_active": true,
+    "weights": {
+      "w_blood": 0.35,
+      "w_hla": 0.20,
+      "w_urgency": 0.25,
+      "w_distance": 0.15,
+      "w_age": 0.03,
+      "w_weight": 0.02,
+      "w_verification": 0.00
+    },
+    "constraints": {
+      "max_distance_km": 1000,
+      "require_abo_compat": true,
+      "use_rh_factor": true,
+      "pediatric_priority": true,
+      "require_blockchain_verification": false,
+      "min_ocr_score_bps": 7500,
+      "max_age_difference": 10,
+      "max_weight_difference_percent": 25
+    },
+    "thresholds": {
+      "min_match_score": 0.70,
+      "min_confidence": 0.65,
+      "critical_urgency_threshold": 95
+    }
+  },
+  "LNG": {
+    "is_active": true,
+    "weights": {
+      "w_blood": 0.30,
+      "w_hla": 0.25,
+      "w_urgency": 0.25,
+      "w_distance": 0.15,
+      "w_age": 0.03,
+      "w_weight": 0.02,
+      "w_verification": 0.00
+    },
+    "constraints": {
+      "max_distance_km": 800,
+      "require_abo_compat": true,
+      "use_rh_factor": true,
+      "pediatric_priority": true,
+      "require_blockchain_verification": false,
+      "min_ocr_score_bps": 7500,
+      "max_age_difference": 15,
+      "max_weight_difference_percent": 30
+    },
+    "thresholds": {
+      "min_match_score": 0.68,
+      "min_confidence": 0.62,
+      "critical_urgency_threshold": 90
+    }
+  },
+  "PNC": {
+    "is_active": true,
+    "weights": {
+      "w_blood": 0.30,
+      "w_hla": 0.25,
+      "w_urgency": 0.20,
+      "w_distance": 0.15,
+      "w_age": 0.05,
+      "w_weight": 0.05,
+      "w_verification": 0.00
+    },
+    "constraints": {
+      "max_distance_km": 1500,
+      "require_abo_compat": true,
+      "use_rh_factor": false,
+      "pediatric_priority": true,
+      "require_blockchain_verification": false,
+      "min_ocr_score_bps": 7000,
+      "max_age_difference": 20,
+      "max_weight_difference_percent": 35
+    },
+    "thresholds": {
+      "min_match_score": 0.62,
+      "min_confidence": 0.58,
+      "critical_urgency_threshold": 85
+    }
+  }
+}
