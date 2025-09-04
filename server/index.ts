@@ -29,6 +29,18 @@ import organizationAuthRoutes from "./routes/organization-auth";
 import organizationPoliciesRoutes from "./routes/organization-policies";
 import testBlockchainRoutes from "./routes/test-blockchain";
 import testIpfsRoutes from "./routes/test-ipfs";
+import signatureAttestationRoutes from "./routes/signature-attestation";
+import policyGovernanceRoutes from "./routes/policy-governance";
+import aiMatchingRoutes from "./routes/ai-matching";
+import notificationsRoutes from "./routes/notifications";
+import {
+  exportRequestsRouter,
+  adminExportRequestsRouter,
+} from "./routes/export-requests";
+import {
+  passwordChangeRequestsRouter,
+  adminPasswordChangeRequestsRouter,
+} from "./routes/password-change-requests";
 
 export function createServer() {
   const app = express();
@@ -81,6 +93,22 @@ export function createServer() {
   app.use("/api/hospital/reports", hospitalReportsRoutes);
   app.use("/api/hospital/notifications", hospitalNotificationsRoutes);
   app.use("/api/hospital/cleanup", hospitalCleanupRoutes);
+
+  // Blockchain integration routes
+  app.use("/api/blockchain/attestation", signatureAttestationRoutes);
+  app.use("/api/blockchain/governance", policyGovernanceRoutes);
+
+  // AI Matching routes
+  app.use("/api/ai/matching", aiMatchingRoutes);
+
+  // Notification system routes
+  app.use("/api/notifications", notificationsRoutes);
+  app.use("/api/export-requests", exportRequestsRouter);
+  app.use("/api/password-change-requests", passwordChangeRequestsRouter);
+
+  // Admin-specific routes
+  app.use("/api/admin", adminExportRequestsRouter);
+  app.use("/api/admin", adminPasswordChangeRequestsRouter);
 
   // Test routes for development
   app.use("/api/test/blockchain", testBlockchainRoutes);

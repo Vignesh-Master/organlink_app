@@ -18,6 +18,11 @@ import OrganizationDashboard from "./pages/organization/Dashboard";
 import OrgPolicies from "./pages/organization/PoliciesList";
 import ProposePolicy from "./pages/organization/ProposePolicy";
 import VotePolicy from "./pages/organization/Vote";
+import OrganizationAnalytics from "./pages/organization/Analytics";
+import OrganizationProfile from "./pages/organization/Profile";
+import OrganizationSettings from "./pages/organization/Settings";
+import OrganizationHelp from "./pages/organization/Help";
+import OrganizationHistory from "./pages/organization/History";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ManageHospitals from "./pages/admin/ManageHospitals";
@@ -43,6 +48,7 @@ import { HospitalAuthProvider } from "./contexts/HospitalAuthContext";
 import { HospitalNotificationProvider } from "./contexts/HospitalNotificationContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { SystemNotificationProvider } from "./contexts/SystemNotificationContext";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +119,26 @@ const App = () => (
                     <Route
                       path="/organization/policies/vote"
                       element={<VotePolicy />}
+                    />
+                    <Route
+                      path="/organization/analytics"
+                      element={<OrganizationAnalytics />}
+                    />
+                    <Route
+                      path="/organization/profile"
+                      element={<OrganizationProfile />}
+                    />
+                    <Route
+                      path="/organization/settings"
+                      element={<OrganizationSettings />}
+                    />
+                    <Route
+                      path="/organization/help"
+                      element={<OrganizationHelp />}
+                    />
+                    <Route
+                      path="/organization/history"
+                      element={<OrganizationHistory />}
                     />
 
                     {/* Admin Routes */}
