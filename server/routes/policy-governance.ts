@@ -8,7 +8,10 @@ const router = express.Router();
 // Schema validation
 const CreateOrgSchema = z.object({
   name: z.string().min(1).max(100),
-  manager: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  manager: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
 });
 
 const SetOrgActiveSchema = z.object({
@@ -42,9 +45,13 @@ router.post("/create-organization", async (req, res) => {
     const { name, manager } = validatedData;
 
     // Use zero address as default manager if not provided
-    const managerAddress = manager || "0x0000000000000000000000000000000000000000";
+    const managerAddress =
+      manager || "0x0000000000000000000000000000000000000000";
 
-    const result = await blockchainService.createOrganization(name, managerAddress);
+    const result = await blockchainService.createOrganization(
+      name,
+      managerAddress,
+    );
 
     res.json({
       success: true,
@@ -111,7 +118,8 @@ router.post("/set-organization-active", async (req, res) => {
 router.post("/create-proposal", async (req, res) => {
   try {
     const validatedData = CreateProposalSchema.parse(req.body);
-    const { proposerOrgId, title, rationale, parameters, startTime, endTime } = validatedData;
+    const { proposerOrgId, title, rationale, parameters, startTime, endTime } =
+      validatedData;
 
     // Prepare proposal data for IPFS
     const proposalData = {
@@ -124,7 +132,10 @@ router.post("/create-proposal", async (req, res) => {
     };
 
     // Upload proposal to IPFS
-    const ipfsCid = await ipfsService.pinJSON(proposalData, `proposal-${title}`);
+    const ipfsCid = await ipfsService.pinJSON(
+      proposalData,
+      `proposal-${title}`,
+    );
 
     // Use current time as start time if not provided
     const actualStartTime = startTime || Math.floor(Date.now() / 1000);
@@ -134,7 +145,7 @@ router.post("/create-proposal", async (req, res) => {
       proposerOrgId,
       ipfsCid,
       actualStartTime,
-      endTime
+      endTime,
     );
 
     res.json({
@@ -190,7 +201,7 @@ router.post("/cast-vote", async (req, res) => {
     const txHash = await blockchainService.castVoteOnBehalf(
       proposalId,
       voterOrgId,
-      vote as 1 | 2 | 3
+      vote as 1 | 2 | 3,
     );
 
     const voteLabels = { 1: "For", 2: "Against", 3: "Abstain" };
@@ -231,7 +242,7 @@ router.post("/finalize-proposal", async (req, res) => {
 
     // Get proposal details before finalizing
     const proposalBefore = await blockchainService.getProposal(proposalId);
-    
+
     // Finalize the proposal
     const txHash = await blockchainService.finalize(proposalId);
 
@@ -317,14 +328,18 @@ router.get("/get-proposal", async (req, res) => {
         startTime: Number(proposal.startTime),
         endTime: Number(proposal.endTime),
         status: Number(proposal.status),
-        statusLabel: statusLabels[Number(proposal.status) as keyof typeof statusLabels] || "Unknown",
+        statusLabel:
+          statusLabels[Number(proposal.status) as keyof typeof statusLabels] ||
+          "Unknown",
         eligibleCount: Number(proposal.eligibleCount),
         forVotes: Number(proposal.forVotes),
         againstVotes: Number(proposal.againstVotes),
         abstainVotes: Number(proposal.abstainVotes),
         passed: proposal.passed,
         proposalContent,
-        ipfsUrl: proposal.ipfsCid ? ipfsService.getFileUrl(proposal.ipfsCid) : null,
+        ipfsUrl: proposal.ipfsCid
+          ? ipfsService.getFileUrl(proposal.ipfsCid)
+          : null,
       },
     });
   } catch (error: any) {
@@ -352,7 +367,8 @@ router.get("/get-tally", async (req, res) => {
 
     // Calculate percentages
     const totalVotes = tally.forVotes + tally.againstVotes + tally.abstainVotes;
-    const participation = tally.eligibleCount > 0 ? (totalVotes / tally.eligibleCount) * 100 : 0;
+    const participation =
+      tally.eligibleCount > 0 ? (totalVotes / tally.eligibleCount) * 100 : 0;
 
     // Determine if proposal would pass (For votes >= 50% of eligible)
     const requiredVotes = Math.ceil(tally.eligibleCount * 0.5);
@@ -371,9 +387,18 @@ router.get("/get-tally", async (req, res) => {
         requiredVotes,
         wouldPass,
         breakdown: {
-          forPercentage: totalVotes > 0 ? Math.round((tally.forVotes / totalVotes) * 10000) / 100 : 0,
-          againstPercentage: totalVotes > 0 ? Math.round((tally.againstVotes / totalVotes) * 10000) / 100 : 0,
-          abstainPercentage: totalVotes > 0 ? Math.round((tally.abstainVotes / totalVotes) * 10000) / 100 : 0,
+          forPercentage:
+            totalVotes > 0
+              ? Math.round((tally.forVotes / totalVotes) * 10000) / 100
+              : 0,
+          againstPercentage:
+            totalVotes > 0
+              ? Math.round((tally.againstVotes / totalVotes) * 10000) / 100
+              : 0,
+          abstainPercentage:
+            totalVotes > 0
+              ? Math.round((tally.abstainVotes / totalVotes) * 10000) / 100
+              : 0,
         },
       },
     });
@@ -423,25 +448,37 @@ router.get("/status", async (req, res) => {
 router.post("/setup-demo-organizations", async (req, res) => {
   try {
     const organizations = [
-      { name: "World Health Organization", manager: "0x0000000000000000000000000000000000000001" },
-      { name: "Pan American Health Organization", manager: "0x0000000000000000000000000000000000000002" },
-      { name: "Health Services Research Administration", manager: "0x0000000000000000000000000000000000000003" },
+      {
+        name: "World Health Organization",
+        manager: "0x0000000000000000000000000000000000000001",
+      },
+      {
+        name: "Pan American Health Organization",
+        manager: "0x0000000000000000000000000000000000000002",
+      },
+      {
+        name: "Health Services Research Administration",
+        manager: "0x0000000000000000000000000000000000000003",
+      },
     ];
 
     const results = [];
 
     for (const org of organizations) {
       try {
-        const result = await blockchainService.createOrganization(org.name, org.manager);
+        const result = await blockchainService.createOrganization(
+          org.name,
+          org.manager,
+        );
         results.push({
           name: org.name,
           orgId: result.orgId,
           txHash: result.txHash,
           success: true,
         });
-        
+
         // Wait a bit between transactions
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error: any) {
         results.push({
           name: org.name,
@@ -454,7 +491,7 @@ router.post("/setup-demo-organizations", async (req, res) => {
     res.json({
       success: true,
       data: {
-        organizationsCreated: results.filter(r => r.success).length,
+        organizationsCreated: results.filter((r) => r.success).length,
         results,
       },
     });
@@ -473,7 +510,8 @@ router.post("/create-demo-proposal", async (req, res) => {
     const demoProposal = {
       proposerOrgId: 1, // WHO
       title: "Pediatric Kidney Transplant Priority Policy",
-      rationale: "Improve outcomes for patients under 18 by prioritizing kidney allocation based on age and medical urgency.",
+      rationale:
+        "Improve outcomes for patients under 18 by prioritizing kidney allocation based on age and medical urgency.",
       parameters: {
         organ: "kidney",
         age_priority: true,
@@ -481,18 +519,21 @@ router.post("/create-demo-proposal", async (req, res) => {
         effective_date: "2025-09-15",
         review_period_months: 12,
       },
-      endTime: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
+      endTime: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours from now
     };
 
     // Upload proposal to IPFS
-    const ipfsCid = await ipfsService.pinJSON(demoProposal, `demo-proposal-${Date.now()}`);
+    const ipfsCid = await ipfsService.pinJSON(
+      demoProposal,
+      `demo-proposal-${Date.now()}`,
+    );
 
     // Create proposal on blockchain
     const result = await blockchainService.createProposalOnBehalf(
       demoProposal.proposerOrgId,
       ipfsCid,
       Math.floor(Date.now() / 1000),
-      demoProposal.endTime
+      demoProposal.endTime,
     );
 
     res.json({

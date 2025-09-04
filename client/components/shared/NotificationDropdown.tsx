@@ -27,7 +27,10 @@ import {
   Activity,
   Trash2,
 } from "lucide-react";
-import { useSystemNotifications, SystemNotification } from "@/contexts/SystemNotificationContext";
+import {
+  useSystemNotifications,
+  SystemNotification,
+} from "@/contexts/SystemNotificationContext";
 import { formatDistance } from "date-fns";
 
 interface NotificationDropdownProps {
@@ -95,7 +98,10 @@ export default function NotificationDropdown({
     markAllAsRead();
   };
 
-  const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
+  const handleDeleteNotification = (
+    e: React.MouseEvent,
+    notificationId: string,
+  ) => {
     e.stopPropagation();
     deleteNotification(notificationId);
   };
@@ -104,28 +110,33 @@ export default function NotificationDropdown({
     return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
   };
 
-  const groupedNotifications = notifications.reduce((groups, notification) => {
-    const today = new Date();
-    const notifDate = new Date(notification.timestamp);
-    const diffDays = Math.floor((today.getTime() - notifDate.getTime()) / (1000 * 60 * 60 * 24));
+  const groupedNotifications = notifications.reduce(
+    (groups, notification) => {
+      const today = new Date();
+      const notifDate = new Date(notification.timestamp);
+      const diffDays = Math.floor(
+        (today.getTime() - notifDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
-    let group: string;
-    if (diffDays === 0) {
-      group = "Today";
-    } else if (diffDays === 1) {
-      group = "Yesterday";
-    } else if (diffDays < 7) {
-      group = "This week";
-    } else {
-      group = "Older";
-    }
+      let group: string;
+      if (diffDays === 0) {
+        group = "Today";
+      } else if (diffDays === 1) {
+        group = "Yesterday";
+      } else if (diffDays < 7) {
+        group = "This week";
+      } else {
+        group = "Older";
+      }
 
-    if (!groups[group]) {
-      groups[group] = [];
-    }
-    groups[group].push(notification);
-    return groups;
-  }, {} as Record<string, SystemNotification[]>);
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(notification);
+      return groups;
+    },
+    {} as Record<string, SystemNotification[]>,
+  );
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -185,83 +196,97 @@ export default function NotificationDropdown({
             </div>
           ) : (
             <div className="divide-y">
-              {Object.entries(groupedNotifications).map(([group, groupNotifications]) => (
-                <div key={group}>
-                  <div className="px-4 py-2 bg-gray-50">
-                    <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                      {group}
-                    </span>
-                  </div>
-                  {groupNotifications.map((notification) => (
-                    <DropdownMenuItem
-                      key={notification.id}
-                      className={`p-0 cursor-pointer ${
-                        !notification.read ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
-                      }`}
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="flex items-start gap-3 p-4 w-full">
-                        <div className="flex-shrink-0 mt-0.5">
-                          {getNotificationIcon(notification)}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h4 className={`text-sm font-medium truncate ${
-                              !notification.read ? "text-gray-900" : "text-gray-700"
-                            }`}>
-                              {notification.title}
-                            </h4>
-                            <div className="flex items-center gap-1 ml-2">
-                              {notification.urgent && (
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                              )}
-                              <button
-                                onClick={(e) => handleDeleteNotification(e, notification.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+              {Object.entries(groupedNotifications).map(
+                ([group, groupNotifications]) => (
+                  <div key={group}>
+                    <div className="px-4 py-2 bg-gray-50">
+                      <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        {group}
+                      </span>
+                    </div>
+                    {groupNotifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className={`p-0 cursor-pointer ${
+                          !notification.read
+                            ? "bg-blue-50 border-l-4 border-l-blue-500"
+                            : ""
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="flex items-start gap-3 p-4 w-full">
+                          <div className="flex-shrink-0 mt-0.5">
+                            {getNotificationIcon(notification)}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-1">
+                              <h4
+                                className={`text-sm font-medium truncate ${
+                                  !notification.read
+                                    ? "text-gray-900"
+                                    : "text-gray-700"
+                                }`}
                               >
-                                <Trash2 className="h-3 w-3 text-gray-400" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <p className={`text-xs mb-2 line-clamp-2 ${
-                            !notification.read ? "text-gray-800" : "text-gray-600"
-                          }`}>
-                            {notification.message}
-                          </p>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 text-gray-500">
-                                {getCategoryIcon(notification.category)}
-                                <span className="text-xs capitalize">
-                                  {notification.category}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-gray-500">
-                                <Clock className="h-3 w-3" />
-                                <span className="text-xs">
-                                  {formatTimeAgo(notification.timestamp)}
-                                </span>
+                                {notification.title}
+                              </h4>
+                              <div className="flex items-center gap-1 ml-2">
+                                {notification.urgent && (
+                                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                )}
+                                <button
+                                  onClick={(e) =>
+                                    handleDeleteNotification(e, notification.id)
+                                  }
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                                >
+                                  <Trash2 className="h-3 w-3 text-gray-400" />
+                                </button>
                               </div>
                             </div>
 
-                            {notification.actionUrl && (
-                              <div className="flex items-center gap-1 text-blue-600">
-                                <ExternalLink className="h-3 w-3" />
-                                <span className="text-xs">
-                                  {notification.actionLabel || "View"}
-                                </span>
+                            <p
+                              className={`text-xs mb-2 line-clamp-2 ${
+                                !notification.read
+                                  ? "text-gray-800"
+                                  : "text-gray-600"
+                              }`}
+                            >
+                              {notification.message}
+                            </p>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 text-gray-500">
+                                  {getCategoryIcon(notification.category)}
+                                  <span className="text-xs capitalize">
+                                    {notification.category}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-500">
+                                  <Clock className="h-3 w-3" />
+                                  <span className="text-xs">
+                                    {formatTimeAgo(notification.timestamp)}
+                                  </span>
+                                </div>
                               </div>
-                            )}
+
+                              {notification.actionUrl && (
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="text-xs">
+                                    {notification.actionLabel || "View"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              ))}
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                ),
+              )}
             </div>
           )}
         </ScrollArea>

@@ -74,7 +74,7 @@ export default function ExportModal({
   const handleExport = async () => {
     try {
       setLoading(true);
-      
+
       const exportOptions: ExportOptions = {
         format,
         ...(showDateRange && { dateFrom, dateTo }),
@@ -217,7 +217,9 @@ export default function ExportModal({
                 <Checkbox
                   id="includePersonalData"
                   checked={includePersonalData}
-                  onCheckedChange={(checked) => setIncludePersonalData(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setIncludePersonalData(checked as boolean)
+                  }
                 />
                 <Label htmlFor="includePersonalData" className="text-sm">
                   Include personal/sensitive data
@@ -227,7 +229,9 @@ export default function ExportModal({
                 <Checkbox
                   id="includeBlockchainData"
                   checked={includeBlockchainData}
-                  onCheckedChange={(checked) => setIncludeBlockchainData(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setIncludeBlockchainData(checked as boolean)
+                  }
                 />
                 <Label htmlFor="includeBlockchainData" className="text-sm">
                   Include blockchain verification data
@@ -247,10 +251,9 @@ export default function ExportModal({
                   </h4>
                   <p className="text-sm text-amber-700 mt-1">
                     This export will include personal and sensitive information.
-                    {requiresApproval 
+                    {requiresApproval
                       ? " Admin approval will be required for this export."
-                      : " Please handle this data securely and in compliance with privacy regulations."
-                    }
+                      : " Please handle this data securely and in compliance with privacy regulations."}
                   </p>
                 </div>
               </div>
@@ -272,8 +275,8 @@ export default function ExportModal({
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <p className="text-xs text-gray-600">
-                  A request will be sent to the administrator for approval.
-                  You will be notified once the export is approved and ready.
+                  A request will be sent to the administrator for approval. You
+                  will be notified once the export is approved and ready.
                 </p>
               </div>
             </div>
@@ -304,7 +307,9 @@ export default function ExportModal({
               <div>
                 <span className="text-gray-600">Approval:</span>
                 <span className="ml-2 font-medium">
-                  {requiresApproval && includePersonalData ? "Required" : "Not Required"}
+                  {requiresApproval && includePersonalData
+                    ? "Required"
+                    : "Not Required"}
                 </span>
               </div>
             </div>
@@ -317,18 +322,24 @@ export default function ExportModal({
           </Button>
           <Button
             onClick={handleExport}
-            disabled={loading || (requiresApproval && includePersonalData && !password)}
+            disabled={
+              loading || (requiresApproval && includePersonalData && !password)
+            }
             className="bg-medical-600 hover:bg-medical-700"
           >
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                {requiresApproval && includePersonalData ? "Requesting..." : "Exporting..."}
+                {requiresApproval && includePersonalData
+                  ? "Requesting..."
+                  : "Exporting..."}
               </>
             ) : (
               <>
                 <Download className="h-4 w-4 mr-2" />
-                {requiresApproval && includePersonalData ? "Request Export" : `Export ${format.toUpperCase()}`}
+                {requiresApproval && includePersonalData
+                  ? "Request Export"
+                  : `Export ${format.toUpperCase()}`}
               </>
             )}
           </Button>

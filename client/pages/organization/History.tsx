@@ -3,7 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   History,
@@ -63,7 +69,7 @@ export default function OrganizationHistory() {
     participationRate: 0,
     averageResponseTime: 0,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -77,14 +83,15 @@ export default function OrganizationHistory() {
   const loadHistoryData = async () => {
     try {
       setLoading(true);
-      
+
       // Mock data - in real implementation, fetch from API
       const mockHistory: HistoryItem[] = [
         {
           id: "1",
           type: "proposal",
           title: "Pediatric Kidney Transplant Priority Policy",
-          description: "Proposed new policy to prioritize kidney allocation for patients under 18 years old",
+          description:
+            "Proposed new policy to prioritize kidney allocation for patients under 18 years old",
           date: "2024-01-22T10:30:00Z",
           status: "created",
           proposalId: "PROP-001",
@@ -102,7 +109,8 @@ export default function OrganizationHistory() {
           id: "2",
           type: "vote",
           title: "Geographic Proximity Preference Policy",
-          description: "Voted 'For' on policy to prioritize local organ allocation",
+          description:
+            "Voted 'For' on policy to prioritize local organ allocation",
           date: "2024-01-21T15:45:00Z",
           status: "voted",
           proposalId: "PROP-002",
@@ -131,7 +139,8 @@ export default function OrganizationHistory() {
           id: "4",
           type: "vote",
           title: "Emergency Protocol Update",
-          description: "Voted 'For' on emergency organ allocation protocol update",
+          description:
+            "Voted 'For' on emergency organ allocation protocol update",
           date: "2024-01-19T14:22:00Z",
           status: "voted",
           proposalId: "PROP-004",
@@ -143,7 +152,8 @@ export default function OrganizationHistory() {
           id: "5",
           type: "proposal",
           title: "Cross-Border Allocation Framework",
-          description: "Proposed framework for international organ sharing agreements",
+          description:
+            "Proposed framework for international organ sharing agreements",
           date: "2024-01-18T11:30:00Z",
           status: "created",
           proposalId: "PROP-005",
@@ -155,7 +165,8 @@ export default function OrganizationHistory() {
           id: "6",
           type: "vote",
           title: "Donor Consent Verification Protocol",
-          description: "Voted 'Against' on enhanced donor consent verification requirements",
+          description:
+            "Voted 'Against' on enhanced donor consent verification requirements",
           date: "2024-01-17T16:10:00Z",
           status: "voted",
           proposalId: "PROP-006",
@@ -184,7 +195,8 @@ export default function OrganizationHistory() {
           id: "8",
           type: "proposal",
           title: "Blockchain Verification Requirements",
-          description: "Proposed mandatory blockchain verification for all organ documents",
+          description:
+            "Proposed mandatory blockchain verification for all organ documents",
           date: "2024-01-15T09:20:00Z",
           status: "created",
           proposalId: "PROP-008",
@@ -203,9 +215,12 @@ export default function OrganizationHistory() {
       // Mock stats
       const mockStats: HistoryStats = {
         totalActivities: mockHistory.length,
-        proposalsCreated: mockHistory.filter(h => h.type === "proposal").length,
-        votesParticipated: mockHistory.filter(h => h.type === "vote").length,
-        successfulProposals: mockHistory.filter(h => h.type === "proposal" && h.outcome === "Passed").length,
+        proposalsCreated: mockHistory.filter((h) => h.type === "proposal")
+          .length,
+        votesParticipated: mockHistory.filter((h) => h.type === "vote").length,
+        successfulProposals: mockHistory.filter(
+          (h) => h.type === "proposal" && h.outcome === "Passed",
+        ).length,
         participationRate: 87.5,
         averageResponseTime: 18.5,
       };
@@ -219,12 +234,14 @@ export default function OrganizationHistory() {
     }
   };
 
-  const filteredItems = historyItems.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredItems = historyItems.filter((item) => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === "all" || item.type === filterType;
-    const matchesStatus = filterStatus === "all" || item.status === filterStatus;
-    
+    const matchesStatus =
+      filterStatus === "all" || item.status === filterStatus;
+
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -244,41 +261,47 @@ export default function OrganizationHistory() {
   const getStatusBadge = (item: HistoryItem) => {
     if (item.type === "vote") {
       const voteColors = {
-        "For": "bg-green-100 text-green-800",
-        "Against": "bg-red-100 text-red-800",
-        "Abstain": "bg-gray-100 text-gray-800",
+        For: "bg-green-100 text-green-800",
+        Against: "bg-red-100 text-red-800",
+        Abstain: "bg-gray-100 text-gray-800",
       };
       return (
-        <Badge className={voteColors[item.vote as keyof typeof voteColors] || ""}>
+        <Badge
+          className={voteColors[item.vote as keyof typeof voteColors] || ""}
+        >
           {item.vote}
         </Badge>
       );
     }
-    
+
     if (item.outcome) {
       const outcomeColors = {
-        "Passed": "bg-green-100 text-green-800",
-        "Failed": "bg-red-100 text-red-800",
-        "Pending": "bg-yellow-100 text-yellow-800",
+        Passed: "bg-green-100 text-green-800",
+        Failed: "bg-red-100 text-red-800",
+        Pending: "bg-yellow-100 text-yellow-800",
       };
       return (
-        <Badge className={outcomeColors[item.outcome as keyof typeof outcomeColors] || ""}>
+        <Badge
+          className={
+            outcomeColors[item.outcome as keyof typeof outcomeColors] || ""
+          }
+        >
           {item.outcome}
         </Badge>
       );
     }
-    
+
     return null;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -287,7 +310,7 @@ export default function OrganizationHistory() {
     const date = new Date(dateString);
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -298,17 +321,17 @@ export default function OrganizationHistory() {
   const exportHistory = () => {
     const csvData = [
       ["Date", "Type", "Title", "Status", "Outcome", "Proposal ID"],
-      ...filteredItems.map(item => [
+      ...filteredItems.map((item) => [
         formatDate(item.date),
         item.type,
         item.title,
         item.status,
         item.outcome || "",
         item.proposalId || "",
-      ])
+      ]),
     ];
-    
-    const csvContent = csvData.map(row => row.join(",")).join("\n");
+
+    const csvContent = csvData.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -339,21 +362,29 @@ export default function OrganizationHistory() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Total Activities</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Total Activities
+                </span>
                 <History className="h-4 w-4 text-medical-600" />
               </div>
-              <span className="text-2xl font-bold">{stats.totalActivities}</span>
+              <span className="text-2xl font-bold">
+                {stats.totalActivities}
+              </span>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Proposals Created</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Proposals Created
+                </span>
                 <FileText className="h-4 w-4 text-blue-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold">{stats.proposalsCreated}</span>
+                <span className="text-2xl font-bold">
+                  {stats.proposalsCreated}
+                </span>
                 <span className="text-sm text-gray-500">
                   {stats.successfulProposals} passed
                 </span>
@@ -364,11 +395,15 @@ export default function OrganizationHistory() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Votes Cast</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Votes Cast
+                </span>
                 <Vote className="h-4 w-4 text-green-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold">{stats.votesParticipated}</span>
+                <span className="text-2xl font-bold">
+                  {stats.votesParticipated}
+                </span>
                 <span className="text-sm text-gray-500">
                   {stats.participationRate}% rate
                 </span>
@@ -379,11 +414,15 @@ export default function OrganizationHistory() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Avg Response</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Avg Response
+                </span>
                 <Clock className="h-4 w-4 text-orange-600" />
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold">{stats.averageResponseTime}h</span>
+                <span className="text-2xl font-bold">
+                  {stats.averageResponseTime}h
+                </span>
                 <span className="text-sm text-gray-500">response time</span>
               </div>
             </CardContent>
@@ -408,7 +447,7 @@ export default function OrganizationHistory() {
                   className="w-full"
                 />
               </div>
-              
+
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Activity Type" />
@@ -445,10 +484,11 @@ export default function OrganizationHistory() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex justify-between items-center mt-4">
               <span className="text-sm text-gray-600">
-                Showing {filteredItems.length} of {historyItems.length} activities
+                Showing {filteredItems.length} of {historyItems.length}{" "}
+                activities
               </span>
               <Button variant="outline" size="sm" onClick={exportHistory}>
                 <Download className="h-4 w-4 mr-2" />
@@ -467,7 +507,9 @@ export default function OrganizationHistory() {
             {filteredItems.length === 0 ? (
               <div className="text-center py-8">
                 <History className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No activities found matching your filters.</p>
+                <p className="text-gray-600">
+                  No activities found matching your filters.
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -489,7 +531,7 @@ export default function OrganizationHistory() {
                       <div className="flex-shrink-0 mt-1">
                         {getTypeIcon(item.type)}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -499,7 +541,7 @@ export default function OrganizationHistory() {
                             <p className="text-sm text-gray-600 mb-2">
                               {item.description}
                             </p>
-                            
+
                             <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
@@ -529,7 +571,7 @@ export default function OrganizationHistory() {
                               </div>
                             )}
                           </div>
-                          
+
                           <div className="flex flex-col items-end gap-2">
                             <span className="text-xs text-gray-500">
                               {getTimeAgo(item.date)}
@@ -542,7 +584,11 @@ export default function OrganizationHistory() {
                         <div className="flex items-center gap-2 mt-3">
                           {item.etherscanUrl && (
                             <Button variant="outline" size="sm" asChild>
-                              <a href={item.etherscanUrl} target="_blank" rel="noopener noreferrer">
+                              <a
+                                href={item.etherscanUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
                                 <ExternalLink className="h-3 w-3 mr-1" />
                                 Etherscan
                               </a>
@@ -550,7 +596,11 @@ export default function OrganizationHistory() {
                           )}
                           {item.ipfsUrl && (
                             <Button variant="outline" size="sm" asChild>
-                              <a href={item.ipfsUrl} target="_blank" rel="noopener noreferrer">
+                              <a
+                                href={item.ipfsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
                                 <Eye className="h-3 w-3 mr-1" />
                                 View Document
                               </a>
@@ -565,7 +615,7 @@ export default function OrganizationHistory() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {index < filteredItems.length - 1 && (
                       <Separator className="my-4" />
                     )}
@@ -589,14 +639,20 @@ export default function OrganizationHistory() {
               <div>
                 <h4 className="font-medium mb-3">Proposal Success Rate</h4>
                 <div className="text-3xl font-bold text-green-600 mb-1">
-                  {stats.proposalsCreated > 0 ? 
-                    Math.round((stats.successfulProposals / stats.proposalsCreated) * 100) : 0}%
+                  {stats.proposalsCreated > 0
+                    ? Math.round(
+                        (stats.successfulProposals / stats.proposalsCreated) *
+                          100,
+                      )
+                    : 0}
+                  %
                 </div>
                 <p className="text-sm text-gray-600">
-                  {stats.successfulProposals} of {stats.proposalsCreated} proposals passed
+                  {stats.successfulProposals} of {stats.proposalsCreated}{" "}
+                  proposals passed
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-3">Voting Participation</h4>
                 <div className="text-3xl font-bold text-blue-600 mb-1">
@@ -606,7 +662,7 @@ export default function OrganizationHistory() {
                   Participated in {stats.votesParticipated} voting processes
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-3">Response Efficiency</h4>
                 <div className="text-3xl font-bold text-orange-600 mb-1">

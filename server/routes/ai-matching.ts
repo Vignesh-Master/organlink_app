@@ -1,6 +1,10 @@
 import express from "express";
 import { z } from "zod";
-import { enhancedAIMatchingService, Patient, Donor } from "../services/enhancedAiMatching.js";
+import {
+  enhancedAIMatchingService,
+  Patient,
+  Donor,
+} from "../services/enhancedAiMatching.js";
 import { blockchainService } from "../services/blockchain.js";
 import pool from "../config/database.js";
 
@@ -20,14 +24,16 @@ const PatientSchema = z.object({
   urgency: z.number().min(0).max(100).optional(),
   waitlist_days: z.number().optional(),
   medical_urgency: z.number().optional(),
-  HLA: z.object({
-    A1: z.string().optional(),
-    A2: z.string().optional(),
-    B1: z.string().optional(),
-    B2: z.string().optional(),
-    DR1: z.string().optional(),
-    DR2: z.string().optional(),
-  }).optional(),
+  HLA: z
+    .object({
+      A1: z.string().optional(),
+      A2: z.string().optional(),
+      B1: z.string().optional(),
+      B2: z.string().optional(),
+      DR1: z.string().optional(),
+      DR2: z.string().optional(),
+    })
+    .optional(),
   hospital_id: z.string().optional(),
   doc_hash: z.string().optional(),
   ipfs_cid: z.string().optional(),
@@ -45,14 +51,16 @@ const DonorSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  HLA: z.object({
-    A1: z.string().optional(),
-    A2: z.string().optional(),
-    B1: z.string().optional(),
-    B2: z.string().optional(),
-    DR1: z.string().optional(),
-    DR2: z.string().optional(),
-  }).optional(),
+  HLA: z
+    .object({
+      A1: z.string().optional(),
+      A2: z.string().optional(),
+      B1: z.string().optional(),
+      B2: z.string().optional(),
+      DR1: z.string().optional(),
+      DR2: z.string().optional(),
+    })
+    .optional(),
   hospital_id: z.string().optional(),
   doc_hash: z.string().optional(),
   ipfs_cid: z.string().optional(),
@@ -63,27 +71,34 @@ const DonorSchema = z.object({
 const MatchRequestSchema = z.object({
   patient: PatientSchema,
   donors: z.array(DonorSchema).optional(),
-  donor_filters: z.object({
-    organ_type: z.string().optional(),
-    max_age: z.number().optional(),
-    min_age: z.number().optional(),
-    blood_groups: z.array(z.string()).optional(),
-    cities: z.array(z.string()).optional(),
-    verified_only: z.boolean().optional(),
-    max_distance_km: z.number().optional(),
-  }).optional(),
-  options: z.object({
-    max_results: z.number().default(10),
-    include_low_scores: z.boolean().default(false),
-    include_ml_prediction: z.boolean().default(true),
-    require_blockchain_verification: z.boolean().optional(),
-    min_match_score: z.number().optional(),
-    min_confidence: z.number().optional(),
-  }).optional(),
+  donor_filters: z
+    .object({
+      organ_type: z.string().optional(),
+      max_age: z.number().optional(),
+      min_age: z.number().optional(),
+      blood_groups: z.array(z.string()).optional(),
+      cities: z.array(z.string()).optional(),
+      verified_only: z.boolean().optional(),
+      max_distance_km: z.number().optional(),
+    })
+    .optional(),
+  options: z
+    .object({
+      max_results: z.number().default(10),
+      include_low_scores: z.boolean().default(false),
+      include_ml_prediction: z.boolean().default(true),
+      require_blockchain_verification: z.boolean().optional(),
+      min_match_score: z.number().optional(),
+      min_confidence: z.number().optional(),
+    })
+    .optional(),
 });
 
 // Get eligible donors from database
-async function getEligibleDonors(organType: string, filters: any = {}): Promise<Donor[]> {
+async function getEligibleDonors(
+  organType: string,
+  filters: any = {},
+): Promise<Donor[]> {
   try {
     let query = `
       SELECT 
@@ -94,7 +109,7 @@ async function getEligibleDonors(organType: string, filters: any = {}): Promise<
       LEFT JOIN hospitals h ON d.hospital_id = h.id
       WHERE d.organ_type = $1 AND d.status = 'available'
     `;
-    
+
     const params: any[] = [organType];
     let paramIndex = 2;
 
@@ -103,32 +118,32 @@ async function getEligibleDonors(organType: string, filters: any = {}): Promise<
       query += ` AND d.age <= $${paramIndex++}`;
       params.push(filters.max_age);
     }
-    
+
     if (filters.min_age) {
       query += ` AND d.age >= $${paramIndex++}`;
       params.push(filters.min_age);
     }
-    
+
     if (filters.blood_groups && filters.blood_groups.length > 0) {
       query += ` AND d.blood_group = ANY($${paramIndex++})`;
       params.push(filters.blood_groups);
     }
-    
+
     if (filters.cities && filters.cities.length > 0) {
       query += ` AND (d.city = ANY($${paramIndex++}) OR h.city = ANY($${paramIndex++}))`;
       params.push(filters.cities);
       params.push(filters.cities);
     }
-    
+
     if (filters.verified_only) {
       query += ` AND d.ocr_verified = true AND d.ocr_score_bps >= 8000`;
     }
-    
+
     query += ` ORDER BY d.created_at DESC LIMIT 100`;
 
     const result = await pool.query(query, params);
-    
-    return result.rows.map(row => ({
+
+    return result.rows.map((row) => ({
       id: row.id,
       organ_type: row.organ_type,
       blood_group: row.blood_group,
@@ -137,7 +152,7 @@ async function getEligibleDonors(organType: string, filters: any = {}): Promise<
       height: row.height,
       city: row.city || row.hospital_city,
       state: row.state,
-      country: row.country || 'IN',
+      country: row.country || "IN",
       HLA: {
         A1: row.hla_a1,
         A2: row.hla_a2,
@@ -160,12 +175,18 @@ async function getEligibleDonors(organType: string, filters: any = {}): Promise<
 }
 
 // Enhance patient/donor data with blockchain verification
-async function enhanceWithBlockchainData(data: Patient | Donor): Promise<Patient | Donor> {
+async function enhanceWithBlockchainData(
+  data: Patient | Donor,
+): Promise<Patient | Donor> {
   if (data.doc_hash) {
     try {
       const blockchainRecord = await blockchainService.getLatest(data.doc_hash);
-      
-      if (blockchainRecord && blockchainRecord.docHash !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
+
+      if (
+        blockchainRecord &&
+        blockchainRecord.docHash !==
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+      ) {
         return {
           ...data,
           ocr_verified: blockchainRecord.ocrVerified,
@@ -178,7 +199,7 @@ async function enhanceWithBlockchainData(data: Patient | Donor): Promise<Patient
       console.warn("Could not verify blockchain data:", error);
     }
   }
-  
+
   return data;
 }
 
@@ -186,26 +207,40 @@ async function enhanceWithBlockchainData(data: Patient | Donor): Promise<Patient
 router.post("/find-matches", async (req, res) => {
   try {
     const validatedData = MatchRequestSchema.parse(req.body);
-    const { patient, donors: providedDonors, donor_filters, options } = validatedData;
+    const {
+      patient,
+      donors: providedDonors,
+      donor_filters,
+      options,
+    } = validatedData;
 
     // Enhance patient data with blockchain verification
-    const enhancedPatient = await enhanceWithBlockchainData(patient) as Patient;
+    const enhancedPatient = (await enhanceWithBlockchainData(
+      patient,
+    )) as Patient;
 
     // Get donors (either provided or from database)
     let donorCandidates: Donor[];
-    
+
     if (providedDonors && providedDonors.length > 0) {
       // Use provided donors
       donorCandidates = await Promise.all(
-        providedDonors.map(donor => enhanceWithBlockchainData(donor) as Promise<Donor>)
+        providedDonors.map(
+          (donor) => enhanceWithBlockchainData(donor) as Promise<Donor>,
+        ),
       );
     } else {
       // Fetch from database
-      donorCandidates = await getEligibleDonors(patient.organ_type, donor_filters);
-      
+      donorCandidates = await getEligibleDonors(
+        patient.organ_type,
+        donor_filters,
+      );
+
       // Enhance with blockchain data
       donorCandidates = await Promise.all(
-        donorCandidates.map(donor => enhanceWithBlockchainData(donor) as Promise<Donor>)
+        donorCandidates.map(
+          (donor) => enhanceWithBlockchainData(donor) as Promise<Donor>,
+        ),
       );
     }
 
@@ -213,7 +248,7 @@ router.post("/find-matches", async (req, res) => {
     if (donor_filters?.max_distance_km && patient.city) {
       // This would be implemented with proper distance calculation
       // For now, we'll filter by city presence
-      donorCandidates = donorCandidates.filter(donor => donor.city);
+      donorCandidates = donorCandidates.filter((donor) => donor.city);
     }
 
     // Perform AI matching
@@ -227,24 +262,28 @@ router.post("/find-matches", async (req, res) => {
         policyOverrides: {
           ...(options?.require_blockchain_verification !== undefined && {
             constraints: {
-              ...enhancedAIMatchingService.getPolicy(patient.organ_type)?.constraints,
-              require_blockchain_verification: options.require_blockchain_verification,
-            }
+              ...enhancedAIMatchingService.getPolicy(patient.organ_type)
+                ?.constraints,
+              require_blockchain_verification:
+                options.require_blockchain_verification,
+            },
           }),
           ...(options?.min_match_score !== undefined && {
             thresholds: {
-              ...enhancedAIMatchingService.getPolicy(patient.organ_type)?.thresholds,
+              ...enhancedAIMatchingService.getPolicy(patient.organ_type)
+                ?.thresholds,
               min_match_score: options.min_match_score,
-            }
+            },
           }),
           ...(options?.min_confidence !== undefined && {
             thresholds: {
-              ...enhancedAIMatchingService.getPolicy(patient.organ_type)?.thresholds,
+              ...enhancedAIMatchingService.getPolicy(patient.organ_type)
+                ?.thresholds,
               min_confidence: options.min_confidence,
-            }
+            },
           }),
         },
-      }
+      },
     );
 
     // Log the matching request for audit purposes
@@ -259,7 +298,7 @@ router.post("/find-matches", async (req, res) => {
           matchResult.matches.length,
           matchResult.summary.bestScore,
           matchResult.policy.organ_type + "_v1.0",
-        ]
+        ],
       );
     } catch (logError) {
       console.warn("Could not log match request:", logError);
@@ -284,7 +323,6 @@ router.post("/find-matches", async (req, res) => {
         },
       },
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -338,9 +376,14 @@ router.put("/policy/:organType", async (req, res) => {
     // const isAdmin = await checkAdminPermissions(req);
     // if (!isAdmin) return res.status(403).json({ success: false, error: "Admin access required" });
 
-    enhancedAIMatchingService.updatePolicy(organType.toUpperCase(), policyUpdates);
+    enhancedAIMatchingService.updatePolicy(
+      organType.toUpperCase(),
+      policyUpdates,
+    );
 
-    const updatedPolicy = enhancedAIMatchingService.getPolicy(organType.toUpperCase());
+    const updatedPolicy = enhancedAIMatchingService.getPolicy(
+      organType.toUpperCase(),
+    );
 
     res.json({
       success: true,
@@ -371,9 +414,9 @@ router.get("/donors/:organType", async (req, res) => {
     const filters = {
       max_age: max_age ? Number(max_age) : undefined,
       min_age: min_age ? Number(min_age) : undefined,
-      blood_groups: blood_groups ? String(blood_groups).split(',') : undefined,
-      cities: cities ? String(cities).split(',') : undefined,
-      verified_only: verified_only === 'true',
+      blood_groups: blood_groups ? String(blood_groups).split(",") : undefined,
+      cities: cities ? String(cities).split(",") : undefined,
+      verified_only: verified_only === "true",
     };
 
     const donors = await getEligibleDonors(organType.toUpperCase(), filters);
@@ -407,14 +450,18 @@ router.post("/check-compatibility", async (req, res) => {
     const validatedDonor = DonorSchema.parse(donor);
 
     // Enhance with blockchain data
-    const enhancedPatient = await enhanceWithBlockchainData(validatedPatient) as Patient;
-    const enhancedDonor = await enhanceWithBlockchainData(validatedDonor) as Donor;
+    const enhancedPatient = (await enhanceWithBlockchainData(
+      validatedPatient,
+    )) as Patient;
+    const enhancedDonor = (await enhanceWithBlockchainData(
+      validatedDonor,
+    )) as Donor;
 
     // Single donor matching
     const matchResult = await enhancedAIMatchingService.matchPatientToDonors(
       enhancedPatient,
       [enhancedDonor],
-      { maxResults: 1, includeLowScores: true }
+      { maxResults: 1, includeLowScores: true },
     );
 
     const compatibility = matchResult.matches[0] || null;
@@ -424,11 +471,11 @@ router.post("/check-compatibility", async (req, res) => {
       data: {
         compatible: compatibility !== null,
         compatibility_details: compatibility,
-        recommendations: compatibility ? 
-          compatibility.warnings.length === 0 ? 
-            ["Excellent match - proceed with allocation"] :
-            compatibility.warnings.map(w => `Consider: ${w}`) :
-          ["Not compatible for transplantation"],
+        recommendations: compatibility
+          ? compatibility.warnings.length === 0
+            ? ["Excellent match - proceed with allocation"]
+            : compatibility.warnings.map((w) => `Consider: ${w}`)
+          : ["Not compatible for transplantation"],
       },
     });
   } catch (error: any) {
@@ -460,15 +507,17 @@ router.post("/export-matches", async (req, res) => {
       });
     }
 
-    const exportData = enhancedAIMatchingService.exportMatchResults(matches, format);
-    
+    const exportData = enhancedAIMatchingService.exportMatchResults(
+      matches,
+      format,
+    );
+
     const contentType = format === "csv" ? "text/csv" : "application/json";
     const filename = `match_results_${Date.now()}.${format}`;
 
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(exportData);
-
   } catch (error: any) {
     console.error("Export matches error:", error);
     res.status(500).json({
@@ -493,7 +542,7 @@ router.get("/statistics", async (req, res) => {
        FROM match_logs 
        WHERE created_at >= NOW() - INTERVAL '${Number(timeframe)} days'
        GROUP BY organ_type
-       ORDER BY total_matches DESC`
+       ORDER BY total_matches DESC`,
     );
 
     const overallStats = await pool.query(
@@ -502,7 +551,7 @@ router.get("/statistics", async (req, res) => {
         AVG(best_score) as overall_avg_score,
         COUNT(CASE WHEN matches_found > 0 THEN 1 END) as successful_matches
        FROM match_logs 
-       WHERE created_at >= NOW() - INTERVAL '${Number(timeframe)} days'`
+       WHERE created_at >= NOW() - INTERVAL '${Number(timeframe)} days'`,
     );
 
     res.json({

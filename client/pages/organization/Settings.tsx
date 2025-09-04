@@ -8,7 +8,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import ExportModal, { ExportOptions } from "@/components/shared/ExportModal";
 import { useSystemNotifications } from "@/contexts/SystemNotificationContext";
 import {
@@ -80,7 +86,8 @@ export default function OrganizationSettings() {
   const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState(false);
   const [passwordChangeReason, setPasswordChangeReason] = useState("");
 
-  const { submitExportRequest, submitPasswordChangeRequest, addNotification } = useSystemNotifications();
+  const { submitExportRequest, submitPasswordChangeRequest, addNotification } =
+    useSystemNotifications();
 
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotifications: true,
@@ -149,7 +156,7 @@ export default function OrganizationSettings() {
         security,
         preferences,
       };
-      
+
       // await fetch('/api/organization/settings', {
       //   method: 'PUT',
       //   headers: { 'Content-Type': 'application/json' },
@@ -166,18 +173,24 @@ export default function OrganizationSettings() {
     }
   };
 
-  const updateNotification = (key: keyof NotificationSettings, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [key]: value }));
+  const updateNotification = (
+    key: keyof NotificationSettings,
+    value: boolean,
+  ) => {
+    setNotifications((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
   const updateSecurity = (key: keyof SecuritySettings, value: any) => {
-    setSecurity(prev => ({ ...prev, [key]: value }));
+    setSecurity((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
-  const updatePreferences = (key: keyof OrganizationPreferences, value: any) => {
-    setPreferences(prev => ({ ...prev, [key]: value }));
+  const updatePreferences = (
+    key: keyof OrganizationPreferences,
+    value: any,
+  ) => {
+    setPreferences((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
@@ -241,7 +254,8 @@ export default function OrganizationSettings() {
       addNotification({
         type: "success",
         title: "Password Change Request Submitted",
-        message: "Your password change request has been submitted for admin approval.",
+        message:
+          "Your password change request has been submitted for admin approval.",
         read: false,
         urgent: false,
         category: "security",
@@ -354,7 +368,9 @@ export default function OrganizationSettings() {
                       <Label htmlFor="timezone">Timezone</Label>
                       <Select
                         value={preferences.timezone}
-                        onValueChange={(value) => updatePreferences("timezone", value)}
+                        onValueChange={(value) =>
+                          updatePreferences("timezone", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -364,7 +380,9 @@ export default function OrganizationSettings() {
                           <SelectItem value="EST">Eastern Time</SelectItem>
                           <SelectItem value="PST">Pacific Time</SelectItem>
                           <SelectItem value="GMT">GMT</SelectItem>
-                          <SelectItem value="CET">Central European Time</SelectItem>
+                          <SelectItem value="CET">
+                            Central European Time
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -373,7 +391,9 @@ export default function OrganizationSettings() {
                       <Label htmlFor="language">Language</Label>
                       <Select
                         value={preferences.language}
-                        onValueChange={(value) => updatePreferences("language", value)}
+                        onValueChange={(value) =>
+                          updatePreferences("language", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -392,7 +412,9 @@ export default function OrganizationSettings() {
                       <Label htmlFor="dateFormat">Date Format</Label>
                       <Select
                         value={preferences.dateFormat}
-                        onValueChange={(value) => updatePreferences("dateFormat", value)}
+                        onValueChange={(value) =>
+                          updatePreferences("dateFormat", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -406,10 +428,14 @@ export default function OrganizationSettings() {
                     </div>
 
                     <div>
-                      <Label htmlFor="votingReminders">Voting Reminder Time</Label>
+                      <Label htmlFor="votingReminders">
+                        Voting Reminder Time
+                      </Label>
                       <Select
                         value={preferences.votingRemindersHours}
-                        onValueChange={(value) => updatePreferences("votingRemindersHours", value)}
+                        onValueChange={(value) =>
+                          updatePreferences("votingRemindersHours", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -437,7 +463,9 @@ export default function OrganizationSettings() {
                       <Switch
                         id="autoLogout"
                         checked={preferences.autoLogout}
-                        onCheckedChange={(checked) => updatePreferences("autoLogout", checked)}
+                        onCheckedChange={(checked) =>
+                          updatePreferences("autoLogout", checked)
+                        }
                       />
                     </div>
                   </div>
@@ -455,7 +483,9 @@ export default function OrganizationSettings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label htmlFor="emailNotifications">Email Notifications</Label>
+                        <Label htmlFor="emailNotifications">
+                          Email Notifications
+                        </Label>
                         <p className="text-sm text-gray-600">
                           Receive notifications via email
                         </p>
@@ -463,13 +493,17 @@ export default function OrganizationSettings() {
                       <Switch
                         id="emailNotifications"
                         checked={notifications.emailNotifications}
-                        onCheckedChange={(checked) => updateNotification("emailNotifications", checked)}
+                        onCheckedChange={(checked) =>
+                          updateNotification("emailNotifications", checked)
+                        }
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label htmlFor="smsNotifications">SMS Notifications</Label>
+                        <Label htmlFor="smsNotifications">
+                          SMS Notifications
+                        </Label>
                         <p className="text-sm text-gray-600">
                           Receive urgent notifications via SMS
                         </p>
@@ -477,7 +511,9 @@ export default function OrganizationSettings() {
                       <Switch
                         id="smsNotifications"
                         checked={notifications.smsNotifications}
-                        onCheckedChange={(checked) => updateNotification("smsNotifications", checked)}
+                        onCheckedChange={(checked) =>
+                          updateNotification("smsNotifications", checked)
+                        }
                       />
                     </div>
                   </div>
@@ -486,25 +522,30 @@ export default function OrganizationSettings() {
 
                   <div className="space-y-4">
                     <h4 className="font-medium">Proposal Notifications</h4>
-                    
+
                     <div className="space-y-4 ml-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <Label htmlFor="proposalCreated">New Proposals</Label>
                           <p className="text-sm text-gray-600">
-                            When new proposals are created by other organizations
+                            When new proposals are created by other
+                            organizations
                           </p>
                         </div>
                         <Switch
                           id="proposalCreated"
                           checked={notifications.proposalCreated}
-                          onCheckedChange={(checked) => updateNotification("proposalCreated", checked)}
+                          onCheckedChange={(checked) =>
+                            updateNotification("proposalCreated", checked)
+                          }
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="votingReminders">Voting Reminders</Label>
+                          <Label htmlFor="votingReminders">
+                            Voting Reminders
+                          </Label>
                           <p className="text-sm text-gray-600">
                             Reminders before voting deadlines
                           </p>
@@ -512,13 +553,17 @@ export default function OrganizationSettings() {
                         <Switch
                           id="votingReminders"
                           checked={notifications.votingReminders}
-                          onCheckedChange={(checked) => updateNotification("votingReminders", checked)}
+                          onCheckedChange={(checked) =>
+                            updateNotification("votingReminders", checked)
+                          }
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="proposalFinalized">Proposal Results</Label>
+                          <Label htmlFor="proposalFinalized">
+                            Proposal Results
+                          </Label>
                           <p className="text-sm text-gray-600">
                             When proposals are finalized with results
                           </p>
@@ -526,7 +571,9 @@ export default function OrganizationSettings() {
                         <Switch
                           id="proposalFinalized"
                           checked={notifications.proposalFinalized}
-                          onCheckedChange={(checked) => updateNotification("proposalFinalized", checked)}
+                          onCheckedChange={(checked) =>
+                            updateNotification("proposalFinalized", checked)
+                          }
                         />
                       </div>
                     </div>
@@ -536,7 +583,7 @@ export default function OrganizationSettings() {
 
                   <div className="space-y-4">
                     <h4 className="font-medium">System Notifications</h4>
-                    
+
                     <div className="space-y-4 ml-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -548,13 +595,17 @@ export default function OrganizationSettings() {
                         <Switch
                           id="systemUpdates"
                           checked={notifications.systemUpdates}
-                          onCheckedChange={(checked) => updateNotification("systemUpdates", checked)}
+                          onCheckedChange={(checked) =>
+                            updateNotification("systemUpdates", checked)
+                          }
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="securityAlerts">Security Alerts</Label>
+                          <Label htmlFor="securityAlerts">
+                            Security Alerts
+                          </Label>
                           <p className="text-sm text-gray-600">
                             Important security notifications (always enabled)
                           </p>
@@ -576,7 +627,9 @@ export default function OrganizationSettings() {
                         <Switch
                           id="weeklyDigest"
                           checked={notifications.weeklyDigest}
-                          onCheckedChange={(checked) => updateNotification("weeklyDigest", checked)}
+                          onCheckedChange={(checked) =>
+                            updateNotification("weeklyDigest", checked)
+                          }
                         />
                       </div>
                     </div>
@@ -596,26 +649,34 @@ export default function OrganizationSettings() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="twoFactor">Two-Factor Authentication</Label>
+                          <Label htmlFor="twoFactor">
+                            Two-Factor Authentication
+                          </Label>
                           <p className="text-sm text-gray-600">
                             Add an extra layer of security to your account
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
                           {security.twoFactorEnabled && (
-                            <Badge className="bg-green-100 text-green-800">Enabled</Badge>
+                            <Badge className="bg-green-100 text-green-800">
+                              Enabled
+                            </Badge>
                           )}
                           <Switch
                             id="twoFactor"
                             checked={security.twoFactorEnabled}
-                            onCheckedChange={(checked) => updateSecurity("twoFactorEnabled", checked)}
+                            onCheckedChange={(checked) =>
+                              updateSecurity("twoFactorEnabled", checked)
+                            }
                           />
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="loginNotifications">Login Notifications</Label>
+                          <Label htmlFor="loginNotifications">
+                            Login Notifications
+                          </Label>
                           <p className="text-sm text-gray-600">
                             Get notified of new login attempts
                           </p>
@@ -623,7 +684,9 @@ export default function OrganizationSettings() {
                         <Switch
                           id="loginNotifications"
                           checked={security.loginNotifications}
-                          onCheckedChange={(checked) => updateSecurity("loginNotifications", checked)}
+                          onCheckedChange={(checked) =>
+                            updateSecurity("loginNotifications", checked)
+                          }
                         />
                       </div>
 
@@ -631,7 +694,9 @@ export default function OrganizationSettings() {
                         <Label htmlFor="sessionTimeout">Session Timeout</Label>
                         <Select
                           value={security.sessionTimeout}
-                          onValueChange={(value) => updateSecurity("sessionTimeout", value)}
+                          onValueChange={(value) =>
+                            updateSecurity("sessionTimeout", value)
+                          }
                         >
                           <SelectTrigger className="w-48">
                             <SelectValue />
@@ -660,7 +725,12 @@ export default function OrganizationSettings() {
                         id="currentPassword"
                         type="password"
                         value={formData.currentPassword}
-                        onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            currentPassword: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div>
@@ -670,24 +740,40 @@ export default function OrganizationSettings() {
                           id="newPassword"
                           type={showPassword ? "text" : "password"}
                           value={formData.newPassword}
-                          onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              newPassword: e.target.value,
+                            }))
+                          }
                         />
                         <button
                           type="button"
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                      <Label htmlFor="confirmPassword">
+                        Confirm New Password
+                      </Label>
                       <Input
                         id="confirmPassword"
                         type="password"
                         value={formData.confirmPassword}
-                        onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            confirmPassword: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <Button
@@ -717,7 +803,12 @@ export default function OrganizationSettings() {
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
                         />
                         <Button variant="outline" size="sm">
                           <Mail className="h-4 w-4" />
@@ -731,7 +822,12 @@ export default function OrganizationSettings() {
                         id="backupEmail"
                         type="email"
                         value={formData.backupEmail}
-                        onChange={(e) => setFormData(prev => ({ ...prev, backupEmail: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            backupEmail: e.target.value,
+                          }))
+                        }
                       />
                     </div>
 
@@ -742,7 +838,12 @@ export default function OrganizationSettings() {
                           id="phone"
                           type="tel"
                           value={formData.phone}
-                          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              phone: e.target.value,
+                            }))
+                          }
                         />
                         <Button variant="outline" size="sm">
                           <Smartphone className="h-4 w-4" />
@@ -759,14 +860,20 @@ export default function OrganizationSettings() {
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                         <div>
                           <p className="font-medium">Current Session</p>
-                          <p className="text-sm text-gray-600">Chrome on Windows • Current location</p>
+                          <p className="text-sm text-gray-600">
+                            Chrome on Windows • Current location
+                          </p>
                         </div>
-                        <Badge className="bg-green-100 text-green-800">Current</Badge>
+                        <Badge className="bg-green-100 text-green-800">
+                          Current
+                        </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                         <div>
                           <p className="font-medium">Mobile Device</p>
-                          <p className="text-sm text-gray-600">Safari on iOS • Last seen 2 hours ago</p>
+                          <p className="text-sm text-gray-600">
+                            Safari on iOS • Last seen 2 hours ago
+                          </p>
                         </div>
                         <Button variant="outline" size="sm">
                           Revoke
@@ -787,21 +894,22 @@ export default function OrganizationSettings() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-gray-600">
-                      Export your organization's data including proposals, votes, and activity history.
+                      Export your organization's data including proposals,
+                      votes, and activity history.
                     </p>
                     <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setExportModalOpen(true)}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export Data
-                    </Button>
-                    <Button variant="outline">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import Settings
-                    </Button>
-                  </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setExportModalOpen(true)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Data
+                      </Button>
+                      <Button variant="outline">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Import Settings
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -811,11 +919,17 @@ export default function OrganizationSettings() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="font-medium mb-2">Deactivate Organization</h4>
+                      <h4 className="font-medium mb-2">
+                        Deactivate Organization
+                      </h4>
                       <p className="text-sm text-gray-600 mb-4">
-                        Temporarily deactivate your organization. You won't be able to propose or vote until reactivated.
+                        Temporarily deactivate your organization. You won't be
+                        able to propose or vote until reactivated.
                       </p>
-                      <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                      <Button
+                        variant="outline"
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
                         Deactivate Organization
                       </Button>
                     </div>
@@ -823,9 +937,12 @@ export default function OrganizationSettings() {
                     <Separator />
 
                     <div>
-                      <h4 className="font-medium mb-2 text-red-600">Delete Organization</h4>
+                      <h4 className="font-medium mb-2 text-red-600">
+                        Delete Organization
+                      </h4>
                       <p className="text-sm text-gray-600 mb-4">
-                        Permanently delete your organization and all associated data. This action cannot be undone.
+                        Permanently delete your organization and all associated
+                        data. This action cannot be undone.
                       </p>
                       <Button variant="destructive">
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -853,7 +970,10 @@ export default function OrganizationSettings() {
         />
 
         {/* Password Change Request Dialog */}
-        <Dialog open={passwordChangeModalOpen} onOpenChange={setPasswordChangeModalOpen}>
+        <Dialog
+          open={passwordChangeModalOpen}
+          onOpenChange={setPasswordChangeModalOpen}
+        >
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -861,7 +981,8 @@ export default function OrganizationSettings() {
                 Request Password Change
               </DialogTitle>
               <DialogDescription>
-                Password changes require admin approval for security. Please provide a reason for this request.
+                Password changes require admin approval for security. Please
+                provide a reason for this request.
               </DialogDescription>
             </DialogHeader>
 
@@ -880,7 +1001,8 @@ export default function OrganizationSettings() {
               <Alert className="border-blue-200 bg-blue-50">
                 <Info className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
-                  An admin will review your request and provide a temporary password via email if approved.
+                  An admin will review your request and provide a temporary
+                  password via email if approved.
                 </AlertDescription>
               </Alert>
             </div>

@@ -29,9 +29,13 @@ router.post("/", async (req, res) => {
   try {
     const userType = req.headers["x-user-type"] as string;
     const validatedData = CreatePasswordChangeRequestSchema.parse(req.body);
-    
-    const requestId = generateId(validatedData.userId, "password_change", Date.now().toString());
-    
+
+    const requestId = generateId(
+      validatedData.userId,
+      "password_change",
+      Date.now().toString(),
+    );
+
     await pool.query(
       `INSERT INTO password_change_requests (
         id, user_id, user_type, user_name, user_email, reason, status, created_at
@@ -43,7 +47,7 @@ router.post("/", async (req, res) => {
         validatedData.userName,
         validatedData.userEmail,
         validatedData.reason,
-      ]
+      ],
     );
 
     // Create notification for admin
@@ -59,7 +63,7 @@ router.post("/", async (req, res) => {
         "security",
         requestId,
         "admin",
-      ]
+      ],
     );
 
     res.json({
@@ -89,16 +93,16 @@ router.get("/my-requests", async (req, res) => {
   try {
     const userType = req.headers["x-user-type"] as string;
     const userId = req.user?.id;
-    
+
     const result = await pool.query(
       `SELECT id, reason, status, created_at, approved_at, admin_comments 
        FROM password_change_requests 
        WHERE user_id = $1 AND user_type = $2 
        ORDER BY created_at DESC`,
-      [userId, userType]
+      [userId, userType],
     );
 
-    const requests = result.rows.map(row => ({
+    const requests = result.rows.map((row) => ({
       id: row.id,
       reason: row.reason,
       status: row.status,
@@ -127,7 +131,7 @@ const adminRouter = express.Router();
 adminRouter.get("/password-change-requests", async (req, res) => {
   try {
     const { status, userType } = req.query;
-    
+
     let query = "SELECT * FROM password_change_requests WHERE 1=1";
     const params: any[] = [];
     let paramIndex = 1;
@@ -146,7 +150,7 @@ adminRouter.get("/password-change-requests", async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    const requests = result.rows.map(row => ({
+    const requests = result.rows.map((row) => ({
       id: row.id,
       userId: row.user_id,
       userType: row.user_type,
@@ -174,155 +178,167 @@ adminRouter.get("/password-change-requests", async (req, res) => {
 });
 
 // Approve password change request (admin only)
-adminRouter.post("/password-change-requests/:requestId/approve", async (req, res) => {
-  try {
-    const { requestId } = req.params;
-    const validatedData = ApproveRequestSchema.parse(req.body);
-    const adminId = req.user?.id;
+adminRouter.post(
+  "/password-change-requests/:requestId/approve",
+  async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const validatedData = ApproveRequestSchema.parse(req.body);
+      const adminId = req.user?.id;
 
-    // Get request details
-    const requestResult = await pool.query(
-      "SELECT * FROM password_change_requests WHERE id = $1",
-      [requestId]
-    );
+      // Get request details
+      const requestResult = await pool.query(
+        "SELECT * FROM password_change_requests WHERE id = $1",
+        [requestId],
+      );
 
-    if (requestResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Password change request not found",
-      });
-    }
+      if (requestResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "Password change request not found",
+        });
+      }
 
-    const request = requestResult.rows[0];
+      const request = requestResult.rows[0];
 
-    // Hash the temporary password
-    const hashedPassword = await bcrypt.hash(validatedData.temporaryPassword, 12);
+      // Hash the temporary password
+      const hashedPassword = await bcrypt.hash(
+        validatedData.temporaryPassword,
+        12,
+      );
 
-    // Update the user's password in the appropriate table
-    const userTable = request.user_type === "hospital" ? "hospitals" : "organizations";
-    await pool.query(
-      `UPDATE ${userTable} SET password = $1, password_changed_at = NOW() WHERE id = $2`,
-      [hashedPassword, request.user_id]
-    );
+      // Update the user's password in the appropriate table
+      const userTable =
+        request.user_type === "hospital" ? "hospitals" : "organizations";
+      await pool.query(
+        `UPDATE ${userTable} SET password = $1, password_changed_at = NOW() WHERE id = $2`,
+        [hashedPassword, request.user_id],
+      );
 
-    // Update request status
-    await pool.query(
-      `UPDATE password_change_requests 
+      // Update request status
+      await pool.query(
+        `UPDATE password_change_requests 
        SET status = 'approved', admin_comments = $1, approved_by = $2, approved_at = NOW()
        WHERE id = $3`,
-      [validatedData.adminComments, adminId, requestId]
-    );
+        [validatedData.adminComments, adminId, requestId],
+      );
 
-    // Create notification for requester
-    await pool.query(
-      `INSERT INTO notifications (
+      // Create notification for requester
+      await pool.query(
+        `INSERT INTO notifications (
         type, title, message, urgent, category, related_id, recipient_type, recipient_id, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-      [
-        "success",
-        "Password Change Approved",
-        `Your password has been reset. A temporary password has been sent to your email (${request.user_email}). Please change it after your next login.`,
-        true,
-        "security",
-        requestId,
-        request.user_type,
-        request.user_id,
-      ]
-    );
+        [
+          "success",
+          "Password Change Approved",
+          `Your password has been reset. A temporary password has been sent to your email (${request.user_email}). Please change it after your next login.`,
+          true,
+          "security",
+          requestId,
+          request.user_type,
+          request.user_id,
+        ],
+      );
 
-    // In a real implementation, you would send an email with the temporary password
-    // For now, we'll just log it (DO NOT DO THIS IN PRODUCTION)
-    console.log(`Temporary password for ${request.user_email}: ${validatedData.temporaryPassword}`);
+      // In a real implementation, you would send an email with the temporary password
+      // For now, we'll just log it (DO NOT DO THIS IN PRODUCTION)
+      console.log(
+        `Temporary password for ${request.user_email}: ${validatedData.temporaryPassword}`,
+      );
 
-    res.json({
-      success: true,
-      message: "Password change approved and temporary password sent",
-      temporaryPasswordSent: true,
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.json({
+        success: true,
+        message: "Password change approved and temporary password sent",
+        temporaryPasswordSent: true,
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid approval data",
+          details: error.errors,
+        });
+      }
+
+      console.error("Approve password change request error:", error);
+      res.status(500).json({
         success: false,
-        error: "Invalid approval data",
-        details: error.errors,
+        error: "Failed to approve password change request",
       });
     }
-
-    console.error("Approve password change request error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to approve password change request",
-    });
-  }
-});
+  },
+);
 
 // Reject password change request (admin only)
-adminRouter.post("/password-change-requests/:requestId/reject", async (req, res) => {
-  try {
-    const { requestId } = req.params;
-    const validatedData = RejectRequestSchema.parse(req.body);
-    const adminId = req.user?.id;
+adminRouter.post(
+  "/password-change-requests/:requestId/reject",
+  async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const validatedData = RejectRequestSchema.parse(req.body);
+      const adminId = req.user?.id;
 
-    // Get request details
-    const requestResult = await pool.query(
-      "SELECT * FROM password_change_requests WHERE id = $1",
-      [requestId]
-    );
+      // Get request details
+      const requestResult = await pool.query(
+        "SELECT * FROM password_change_requests WHERE id = $1",
+        [requestId],
+      );
 
-    if (requestResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Password change request not found",
-      });
-    }
+      if (requestResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "Password change request not found",
+        });
+      }
 
-    const request = requestResult.rows[0];
+      const request = requestResult.rows[0];
 
-    // Update request status
-    await pool.query(
-      `UPDATE password_change_requests 
+      // Update request status
+      await pool.query(
+        `UPDATE password_change_requests 
        SET status = 'rejected', admin_comments = $1, approved_by = $2, approved_at = NOW()
        WHERE id = $3`,
-      [validatedData.reason, adminId, requestId]
-    );
+        [validatedData.reason, adminId, requestId],
+      );
 
-    // Create notification for requester
-    await pool.query(
-      `INSERT INTO notifications (
+      // Create notification for requester
+      await pool.query(
+        `INSERT INTO notifications (
         type, title, message, urgent, category, related_id, recipient_type, recipient_id, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-      [
-        "warning",
-        "Password Change Request Rejected",
-        `Your password change request was rejected. Reason: ${validatedData.reason}`,
-        true,
-        "security",
-        requestId,
-        request.user_type,
-        request.user_id,
-      ]
-    );
+        [
+          "warning",
+          "Password Change Request Rejected",
+          `Your password change request was rejected. Reason: ${validatedData.reason}`,
+          true,
+          "security",
+          requestId,
+          request.user_type,
+          request.user_id,
+        ],
+      );
 
-    res.json({
-      success: true,
-      message: "Password change request rejected",
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.json({
+        success: true,
+        message: "Password change request rejected",
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid rejection data",
+          details: error.errors,
+        });
+      }
+
+      console.error("Reject password change request error:", error);
+      res.status(500).json({
         success: false,
-        error: "Invalid rejection data",
-        details: error.errors,
+        error: "Failed to reject password change request",
       });
     }
-
-    console.error("Reject password change request error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to reject password change request",
-    });
-  }
-});
+  },
+);
 
 // Generate temporary password endpoint (admin helper)
 adminRouter.post("/generate-temp-password", async (req, res) => {
@@ -347,4 +363,7 @@ adminRouter.post("/generate-temp-password", async (req, res) => {
   }
 });
 
-export { router as passwordChangeRequestsRouter, adminRouter as adminPasswordChangeRequestsRouter };
+export {
+  router as passwordChangeRequestsRouter,
+  adminRouter as adminPasswordChangeRequestsRouter,
+};

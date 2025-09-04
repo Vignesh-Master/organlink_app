@@ -5,7 +5,7 @@ import { ethers } from "ethers";
  * Generate keccak256 hash of a buffer (same as Ethereum's hash function)
  */
 export function hashBuffer(buffer: Buffer): string {
-  const hash = createHash('sha256').update(buffer).digest();
+  const hash = createHash("sha256").update(buffer).digest();
   return ethers.keccak256(hash);
 }
 
@@ -13,7 +13,7 @@ export function hashBuffer(buffer: Buffer): string {
  * Generate keccak256 hash of a string
  */
 export function hashString(input: string): string {
-  const buffer = Buffer.from(input, 'utf8');
+  const buffer = Buffer.from(input, "utf8");
   return hashBuffer(buffer);
 }
 
@@ -22,8 +22,8 @@ export function hashString(input: string): string {
  */
 export function generateRandomHex(length: number = 32): string {
   const buffer = Buffer.alloc(length);
-  require('crypto').randomFillSync(buffer);
-  return '0x' + buffer.toString('hex');
+  require("crypto").randomFillSync(buffer);
+  return "0x" + buffer.toString("hex");
 }
 
 /**
@@ -45,13 +45,18 @@ export function isValidTxHash(hash: string): boolean {
  */
 export function isValidIPFSCid(cid: string): boolean {
   // Basic CID validation - starts with Qm or bafy/bafk for v1
-  return /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[a-z0-9]{52}|bafk[a-z0-9]{52})$/.test(cid);
+  return /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[a-z0-9]{52}|bafk[a-z0-9]{52})$/.test(
+    cid,
+  );
 }
 
 /**
  * Format wei to ether with specified decimal places
  */
-export function formatEther(wei: bigint | string, decimals: number = 4): string {
+export function formatEther(
+  wei: bigint | string,
+  decimals: number = 4,
+): string {
   const ether = ethers.formatEther(wei);
   return parseFloat(ether).toFixed(decimals);
 }
@@ -88,14 +93,14 @@ export function generateDocumentMetadata(data: {
  * Validate OCR score (should be between 0 and 100)
  */
 export function validateOcrScore(score: number): boolean {
-  return typeof score === 'number' && score >= 0 && score <= 100;
+  return typeof score === "number" && score >= 0 && score <= 100;
 }
 
 /**
  * Generate deterministic ID from multiple inputs
  */
 export function generateId(...inputs: string[]): string {
-  const combined = inputs.join('|');
+  const combined = inputs.join("|");
   return hashString(combined);
 }
 
@@ -104,12 +109,12 @@ export function generateId(...inputs: string[]): string {
  */
 export function parseVote(vote: string | number): 1 | 2 | 3 | null {
   const voteMap: Record<string, 1 | 2 | 3> = {
-    'for': 1,
-    'against': 2,
-    'abstain': 3,
-    '1': 1,
-    '2': 2,
-    '3': 3,
+    for: 1,
+    against: 2,
+    abstain: 3,
+    "1": 1,
+    "2": 2,
+    "3": 3,
   };
 
   const normalizedVote = String(vote).toLowerCase();
@@ -120,7 +125,7 @@ export function parseVote(vote: string | number): 1 | 2 | 3 | null {
  * Get vote label from numeric value
  */
 export function getVoteLabel(vote: 1 | 2 | 3): string {
-  const labels = { 1: 'For', 2: 'Against', 3: 'Abstain' };
+  const labels = { 1: "For", 2: "Against", 3: "Abstain" };
   return labels[vote];
 }
 
@@ -128,7 +133,7 @@ export function getVoteLabel(vote: 1 | 2 | 3): string {
  * Calculate proposal voting deadline from duration
  */
 export function calculateVotingDeadline(durationHours: number = 24): number {
-  return Math.floor(Date.now() / 1000) + (durationHours * 60 * 60);
+  return Math.floor(Date.now() / 1000) + durationHours * 60 * 60;
 }
 
 /**
@@ -152,15 +157,15 @@ export function sanitizeInput(input: string, maxLength: number = 100): string {
   return input
     .trim()
     .slice(0, maxLength)
-    .replace(/[^\w\s\-_.,!?()]/g, ''); // Remove special characters except basic punctuation
+    .replace(/[^\w\s\-_.,!?()]/g, ""); // Remove special characters except basic punctuation
 }
 
 /**
  * Validate proposal parameters
  */
 export function validateProposalParams(params: any): boolean {
-  if (!params || typeof params !== 'object') return false;
-  
+  if (!params || typeof params !== "object") return false;
+
   // Basic validation - params should be serializable
   try {
     JSON.stringify(params);
@@ -181,9 +186,9 @@ export function generateSalt(): string {
  * Hash password with salt (for API keys, etc.)
  */
 export function hashWithSalt(input: string, salt: string): string {
-  return createHash('sha256')
+  return createHash("sha256")
     .update(input + salt)
-    .digest('hex');
+    .digest("hex");
 }
 
 /**
@@ -198,12 +203,12 @@ export function generateRateLimitKey(ip: string, endpoint: string): string {
  */
 export function isValidDocumentType(mimeType: string): boolean {
   const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'application/pdf',
-    'image/tiff',
-    'image/bmp'
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "application/pdf",
+    "image/tiff",
+    "image/bmp",
   ];
   return allowedTypes.includes(mimeType);
 }

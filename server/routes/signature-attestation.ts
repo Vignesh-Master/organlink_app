@@ -47,7 +47,7 @@ router.post("/upload-and-attest", async (req, res) => {
       patientId,
       hospitalId,
       ocrScore: Number(ocrScore),
-      verified: verified === 'true',
+      verified: verified === "true",
       uploadedAt: new Date().toISOString(),
       fileName: req.file.originalname,
       fileSize: req.file.size,
@@ -58,18 +58,18 @@ router.post("/upload-and-attest", async (req, res) => {
     const ipfsCid = await ipfsService.pinFile(
       req.file.buffer,
       req.file.originalname,
-      ipfsMetadata
+      ipfsMetadata,
     );
 
     // Attest on blockchain
     const ocrScoreBps = Math.round(Number(ocrScore) * 100); // Convert to basis points
-    const isVerified = verified === 'true';
+    const isVerified = verified === "true";
 
     const txHash = await blockchainService.attestOcr(
       docHash,
       ipfsCid,
       ocrScoreBps,
-      isVerified
+      isVerified,
     );
 
     res.json({
@@ -103,7 +103,7 @@ router.post("/attest-ocr", async (req, res) => {
       docHash,
       ipfsCid,
       ocrScoreBps,
-      verified
+      verified,
     );
 
     res.json({
@@ -140,7 +140,7 @@ router.get("/get-latest", async (req, res) => {
   try {
     const { docHash } = req.query;
 
-    if (!docHash || typeof docHash !== 'string') {
+    if (!docHash || typeof docHash !== "string") {
       return res.status(400).json({
         success: false,
         error: "Document hash is required",
@@ -152,7 +152,10 @@ router.get("/get-latest", async (req, res) => {
     const record = await blockchainService.getLatest(validatedData.docHash);
 
     // Check if record exists (docHash is not zero)
-    if (record.docHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+    if (
+      record.docHash ===
+      "0x0000000000000000000000000000000000000000000000000000000000000000"
+    ) {
       return res.status(404).json({
         success: false,
         error: "No attestation record found for this document hash",
@@ -198,7 +201,7 @@ router.get("/get-history", async (req, res) => {
   try {
     const { docHash } = req.query;
 
-    if (!docHash || typeof docHash !== 'string') {
+    if (!docHash || typeof docHash !== "string") {
       return res.status(400).json({
         success: false,
         error: "Document hash is required",
@@ -211,7 +214,10 @@ router.get("/get-history", async (req, res) => {
     // In a full implementation, you'd query blockchain events for history
     const record = await blockchainService.getLatest(validatedData.docHash);
 
-    if (record.docHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+    if (
+      record.docHash ===
+      "0x0000000000000000000000000000000000000000000000000000000000000000"
+    ) {
       return res.json({
         success: true,
         data: {
@@ -274,7 +280,10 @@ router.post("/verify-document", async (req, res) => {
     // Get blockchain record
     const record = await blockchainService.getLatest(docHash);
 
-    if (record.docHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+    if (
+      record.docHash ===
+      "0x0000000000000000000000000000000000000000000000000000000000000000"
+    ) {
       return res.json({
         success: true,
         data: {

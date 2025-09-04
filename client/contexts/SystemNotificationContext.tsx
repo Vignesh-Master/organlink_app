@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { toast } from "sonner";
 
 export interface SystemNotification {
@@ -9,7 +15,13 @@ export interface SystemNotification {
   timestamp: string;
   read: boolean;
   urgent: boolean;
-  category: "general" | "policy" | "blockchain" | "export" | "security" | "system";
+  category:
+    | "general"
+    | "policy"
+    | "blockchain"
+    | "export"
+    | "security"
+    | "system";
   relatedId?: string;
   actionUrl?: string;
   actionLabel?: string;
@@ -57,30 +69,48 @@ interface SystemNotificationContextType {
   unreadCount: number;
   exportRequests: ExportRequest[];
   passwordChangeRequests: PasswordChangeRequest[];
-  
+
   // Notification methods
-  addNotification: (notification: Omit<SystemNotification, "id" | "timestamp">) => void;
+  addNotification: (
+    notification: Omit<SystemNotification, "id" | "timestamp">,
+  ) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (notificationId: string) => void;
   clearExpiredNotifications: () => void;
-  
+
   // Export request methods
-  submitExportRequest: (request: Omit<ExportRequest, "id" | "requestedAt" | "status">) => Promise<string>;
-  approveExportRequest: (requestId: string, adminComments?: string) => Promise<void>;
+  submitExportRequest: (
+    request: Omit<ExportRequest, "id" | "requestedAt" | "status">,
+  ) => Promise<string>;
+  approveExportRequest: (
+    requestId: string,
+    adminComments?: string,
+  ) => Promise<void>;
   rejectExportRequest: (requestId: string, reason: string) => Promise<void>;
-  
+
   // Password change request methods
-  submitPasswordChangeRequest: (request: Omit<PasswordChangeRequest, "id" | "requestedAt" | "status">) => Promise<string>;
-  approvePasswordChangeRequest: (requestId: string, temporaryPassword: string, adminComments?: string) => Promise<void>;
-  rejectPasswordChangeRequest: (requestId: string, reason: string) => Promise<void>;
-  
+  submitPasswordChangeRequest: (
+    request: Omit<PasswordChangeRequest, "id" | "requestedAt" | "status">,
+  ) => Promise<string>;
+  approvePasswordChangeRequest: (
+    requestId: string,
+    temporaryPassword: string,
+    adminComments?: string,
+  ) => Promise<void>;
+  rejectPasswordChangeRequest: (
+    requestId: string,
+    reason: string,
+  ) => Promise<void>;
+
   // Real-time methods
   subscribeToNotifications: () => void;
   unsubscribeFromNotifications: () => void;
 }
 
-const SystemNotificationContext = createContext<SystemNotificationContextType | undefined>(undefined);
+const SystemNotificationContext = createContext<
+  SystemNotificationContextType | undefined
+>(undefined);
 
 interface SystemNotificationProviderProps {
   children: ReactNode;
@@ -88,16 +118,18 @@ interface SystemNotificationProviderProps {
   userId?: string;
 }
 
-export function SystemNotificationProvider({ 
-  children, 
-  userType, 
-  userId 
+export function SystemNotificationProvider({
+  children,
+  userType,
+  userId,
 }: SystemNotificationProviderProps) {
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [exportRequests, setExportRequests] = useState<ExportRequest[]>([]);
-  const [passwordChangeRequests, setPasswordChangeRequests] = useState<PasswordChangeRequest[]>([]);
+  const [passwordChangeRequests, setPasswordChangeRequests] = useState<
+    PasswordChangeRequest[]
+  >([]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Load initial data
   useEffect(() => {
@@ -166,28 +198,31 @@ export function SystemNotificationProvider({
     }
   };
 
-  const addNotification = (notification: Omit<SystemNotification, "id" | "timestamp">) => {
+  const addNotification = (
+    notification: Omit<SystemNotification, "id" | "timestamp">,
+  ) => {
     const newNotification: SystemNotification = {
       ...notification,
       id: `notif_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       timestamp: new Date().toISOString(),
     };
 
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications((prev) => [newNotification, ...prev]);
 
     // Show toast for important notifications
     if (notification.urgent || notification.type === "error") {
-      toast[notification.type === "error" ? "error" : "info"](notification.title, {
-        description: notification.message,
-      });
+      toast[notification.type === "error" ? "error" : "info"](
+        notification.title,
+        {
+          description: notification.message,
+        },
+      );
     }
   };
 
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === notificationId ? { ...n, read: true } : n
-      )
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
     );
 
     // Update on server
@@ -195,29 +230,29 @@ export function SystemNotificationProvider({
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, read: true }))
-    );
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
     // Update on server
     updateAllNotificationsStatus({ read: true });
   };
 
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+
     // Delete on server
     deleteNotificationOnServer(notificationId);
   };
 
   const clearExpiredNotifications = () => {
     const now = new Date();
-    setNotifications(prev =>
-      prev.filter(n => !n.expiresAt || new Date(n.expiresAt) > now)
+    setNotifications((prev) =>
+      prev.filter((n) => !n.expiresAt || new Date(n.expiresAt) > now),
     );
   };
 
-  const submitExportRequest = async (request: Omit<ExportRequest, "id" | "requestedAt" | "status">): Promise<string> => {
+  const submitExportRequest = async (
+    request: Omit<ExportRequest, "id" | "requestedAt" | "status">,
+  ): Promise<string> => {
     try {
       const token = localStorage.getItem(`${userType}_token`);
       const response = await fetch("/api/export-requests", {
@@ -232,7 +267,7 @@ export function SystemNotificationProvider({
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Add notification for user
         addNotification({
           type: "info",
@@ -256,32 +291,43 @@ export function SystemNotificationProvider({
     }
   };
 
-  const approveExportRequest = async (requestId: string, adminComments?: string) => {
+  const approveExportRequest = async (
+    requestId: string,
+    adminComments?: string,
+  ) => {
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/export-requests/${requestId}/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/export-requests/${requestId}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ adminComments }),
         },
-        body: JSON.stringify({ adminComments }),
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Update local state
-        setExportRequests(prev =>
-          prev.map(req =>
+        setExportRequests((prev) =>
+          prev.map((req) =>
             req.id === requestId
-              ? { ...req, status: "approved", adminComments, approvedAt: new Date().toISOString() }
-              : req
-          )
+              ? {
+                  ...req,
+                  status: "approved",
+                  adminComments,
+                  approvedAt: new Date().toISOString(),
+                }
+              : req,
+          ),
         );
 
         // Notify requester
-        const request = exportRequests.find(r => r.id === requestId);
+        const request = exportRequests.find((r) => r.id === requestId);
         if (request) {
           addNotification({
             type: "success",
@@ -307,27 +353,30 @@ export function SystemNotificationProvider({
   const rejectExportRequest = async (requestId: string, reason: string) => {
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/export-requests/${requestId}/reject`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/export-requests/${requestId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reason }),
         },
-        body: JSON.stringify({ reason }),
-      });
+      );
 
       if (response.ok) {
         // Update local state
-        setExportRequests(prev =>
-          prev.map(req =>
+        setExportRequests((prev) =>
+          prev.map((req) =>
             req.id === requestId
               ? { ...req, status: "rejected", adminComments: reason }
-              : req
-          )
+              : req,
+          ),
         );
 
         // Notify requester
-        const request = exportRequests.find(r => r.id === requestId);
+        const request = exportRequests.find((r) => r.id === requestId);
         if (request) {
           addNotification({
             type: "warning",
@@ -348,7 +397,9 @@ export function SystemNotificationProvider({
     }
   };
 
-  const submitPasswordChangeRequest = async (request: Omit<PasswordChangeRequest, "id" | "requestedAt" | "status">): Promise<string> => {
+  const submitPasswordChangeRequest = async (
+    request: Omit<PasswordChangeRequest, "id" | "requestedAt" | "status">,
+  ): Promise<string> => {
     try {
       const token = localStorage.getItem(`${userType}_token`);
       const response = await fetch("/api/password-change-requests", {
@@ -363,12 +414,13 @@ export function SystemNotificationProvider({
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Add notification for user
         addNotification({
           type: "info",
           title: "Password Change Request Submitted",
-          message: "Your password change request has been submitted for admin approval.",
+          message:
+            "Your password change request has been submitted for admin approval.",
           read: false,
           urgent: false,
           category: "security",
@@ -387,30 +439,43 @@ export function SystemNotificationProvider({
     }
   };
 
-  const approvePasswordChangeRequest = async (requestId: string, temporaryPassword: string, adminComments?: string) => {
+  const approvePasswordChangeRequest = async (
+    requestId: string,
+    temporaryPassword: string,
+    adminComments?: string,
+  ) => {
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/password-change-requests/${requestId}/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/password-change-requests/${requestId}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ temporaryPassword, adminComments }),
         },
-        body: JSON.stringify({ temporaryPassword, adminComments }),
-      });
+      );
 
       if (response.ok) {
         // Update local state
-        setPasswordChangeRequests(prev =>
-          prev.map(req =>
+        setPasswordChangeRequests((prev) =>
+          prev.map((req) =>
             req.id === requestId
-              ? { ...req, status: "approved", temporaryPassword, adminComments, approvedAt: new Date().toISOString() }
-              : req
-          )
+              ? {
+                  ...req,
+                  status: "approved",
+                  temporaryPassword,
+                  adminComments,
+                  approvedAt: new Date().toISOString(),
+                }
+              : req,
+          ),
         );
 
         // Notify requester
-        const request = passwordChangeRequests.find(r => r.id === requestId);
+        const request = passwordChangeRequests.find((r) => r.id === requestId);
         if (request) {
           addNotification({
             type: "success",
@@ -431,30 +496,36 @@ export function SystemNotificationProvider({
     }
   };
 
-  const rejectPasswordChangeRequest = async (requestId: string, reason: string) => {
+  const rejectPasswordChangeRequest = async (
+    requestId: string,
+    reason: string,
+  ) => {
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/password-change-requests/${requestId}/reject`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/password-change-requests/${requestId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reason }),
         },
-        body: JSON.stringify({ reason }),
-      });
+      );
 
       if (response.ok) {
         // Update local state
-        setPasswordChangeRequests(prev =>
-          prev.map(req =>
+        setPasswordChangeRequests((prev) =>
+          prev.map((req) =>
             req.id === requestId
               ? { ...req, status: "rejected", adminComments: reason }
-              : req
-          )
+              : req,
+          ),
         );
 
         // Notify requester
-        const request = passwordChangeRequests.find(r => r.id === requestId);
+        const request = passwordChangeRequests.find((r) => r.id === requestId);
         if (request) {
           addNotification({
             type: "warning",
@@ -494,7 +565,10 @@ export function SystemNotificationProvider({
   };
 
   // Helper functions for server communication
-  const updateNotificationStatus = async (notificationId: string, updates: Partial<SystemNotification>) => {
+  const updateNotificationStatus = async (
+    notificationId: string,
+    updates: Partial<SystemNotification>,
+  ) => {
     try {
       const token = localStorage.getItem(`${userType}_token`);
       await fetch(`/api/notifications/${notificationId}`, {
@@ -510,7 +584,9 @@ export function SystemNotificationProvider({
     }
   };
 
-  const updateAllNotificationsStatus = async (updates: Partial<SystemNotification>) => {
+  const updateAllNotificationsStatus = async (
+    updates: Partial<SystemNotification>,
+  ) => {
     try {
       const token = localStorage.getItem(`${userType}_token`);
       await fetch("/api/notifications/mark-all-read", {
@@ -570,7 +646,9 @@ export function SystemNotificationProvider({
 export function useSystemNotifications() {
   const context = useContext(SystemNotificationContext);
   if (context === undefined) {
-    throw new Error("useSystemNotifications must be used within a SystemNotificationProvider");
+    throw new Error(
+      "useSystemNotifications must be used within a SystemNotificationProvider",
+    );
   }
   return context;
 }

@@ -33,8 +33,14 @@ import signatureAttestationRoutes from "./routes/signature-attestation";
 import policyGovernanceRoutes from "./routes/policy-governance";
 import aiMatchingRoutes from "./routes/ai-matching";
 import notificationsRoutes from "./routes/notifications";
-import { exportRequestsRouter, adminExportRequestsRouter } from "./routes/export-requests";
-import { passwordChangeRequestsRouter, adminPasswordChangeRequestsRouter } from "./routes/password-change-requests";
+import {
+  exportRequestsRouter,
+  adminExportRequestsRouter,
+} from "./routes/export-requests";
+import {
+  passwordChangeRequestsRouter,
+  adminPasswordChangeRequestsRouter,
+} from "./routes/password-change-requests";
 
 export function createServer() {
   const app = express();

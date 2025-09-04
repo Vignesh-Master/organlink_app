@@ -31,9 +31,13 @@ router.post("/", async (req, res) => {
   try {
     const userType = req.headers["x-user-type"] as string;
     const validatedData = CreateExportRequestSchema.parse(req.body);
-    
-    const requestId = generateId(validatedData.requesterId, validatedData.dataType, Date.now().toString());
-    
+
+    const requestId = generateId(
+      validatedData.requesterId,
+      validatedData.dataType,
+      Date.now().toString(),
+    );
+
     await pool.query(
       `INSERT INTO export_requests (
         id, requester_id, requester_name, requester_type, data_type, format,
@@ -50,7 +54,7 @@ router.post("/", async (req, res) => {
         validatedData.dateFrom,
         validatedData.dateTo,
         JSON.stringify(validatedData.filters),
-      ]
+      ],
     );
 
     // Create notification for admin
@@ -61,12 +65,12 @@ router.post("/", async (req, res) => {
       [
         "approval_request",
         "New Export Request",
-        `${validatedData.requesterName} has requested to export ${validatedData.dataType} data${validatedData.includesPersonalData ? ' (includes personal data)' : ''}.`,
+        `${validatedData.requesterName} has requested to export ${validatedData.dataType} data${validatedData.includesPersonalData ? " (includes personal data)" : ""}.`,
         validatedData.includesPersonalData,
         "export",
         requestId,
         "admin",
-      ]
+      ],
     );
 
     res.json({
@@ -96,15 +100,15 @@ router.get("/my-requests", async (req, res) => {
   try {
     const userType = req.headers["x-user-type"] as string;
     const userId = req.user?.id;
-    
+
     const result = await pool.query(
       `SELECT * FROM export_requests 
        WHERE requester_id = $1 AND requester_type = $2 
        ORDER BY created_at DESC`,
-      [userId, userType]
+      [userId, userType],
     );
 
-    const requests = result.rows.map(row => ({
+    const requests = result.rows.map((row) => ({
       id: row.id,
       dataType: row.data_type,
       format: row.format,
@@ -137,7 +141,7 @@ const adminRouter = express.Router();
 adminRouter.get("/export-requests", async (req, res) => {
   try {
     const { status, requesterType } = req.query;
-    
+
     let query = "SELECT * FROM export_requests WHERE 1=1";
     const params: any[] = [];
     let paramIndex = 1;
@@ -156,7 +160,7 @@ adminRouter.get("/export-requests", async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    const requests = result.rows.map(row => ({
+    const requests = result.rows.map((row) => ({
       id: row.id,
       requesterId: row.requester_id,
       requesterName: row.requester_name,
@@ -196,7 +200,7 @@ adminRouter.post("/export-requests/:requestId/approve", async (req, res) => {
     // Get request details
     const requestResult = await pool.query(
       "SELECT * FROM export_requests WHERE id = $1",
-      [requestId]
+      [requestId],
     );
 
     if (requestResult.rows.length === 0) {
@@ -218,7 +222,7 @@ adminRouter.post("/export-requests/:requestId/approve", async (req, res) => {
        SET status = 'approved', admin_comments = $1, approved_by = $2, 
            approved_at = NOW(), download_url = $3, expires_at = $4
        WHERE id = $5`,
-      [validatedData.adminComments, adminId, downloadUrl, expiresAt, requestId]
+      [validatedData.adminComments, adminId, downloadUrl, expiresAt, requestId],
     );
 
     // Create notification for requester
@@ -238,7 +242,7 @@ adminRouter.post("/export-requests/:requestId/approve", async (req, res) => {
         "Download",
         request.requester_type,
         request.requester_id,
-      ]
+      ],
     );
 
     res.json({
@@ -273,7 +277,7 @@ adminRouter.post("/export-requests/:requestId/reject", async (req, res) => {
     // Get request details
     const requestResult = await pool.query(
       "SELECT * FROM export_requests WHERE id = $1",
-      [requestId]
+      [requestId],
     );
 
     if (requestResult.rows.length === 0) {
@@ -290,7 +294,7 @@ adminRouter.post("/export-requests/:requestId/reject", async (req, res) => {
       `UPDATE export_requests 
        SET status = 'rejected', admin_comments = $1, approved_by = $2, approved_at = NOW()
        WHERE id = $3`,
-      [validatedData.reason, adminId, requestId]
+      [validatedData.reason, adminId, requestId],
     );
 
     // Create notification for requester
@@ -307,7 +311,7 @@ adminRouter.post("/export-requests/:requestId/reject", async (req, res) => {
         requestId,
         request.requester_type,
         request.requester_id,
-      ]
+      ],
     );
 
     res.json({
@@ -331,4 +335,7 @@ adminRouter.post("/export-requests/:requestId/reject", async (req, res) => {
   }
 });
 
-export { router as exportRequestsRouter, adminRouter as adminExportRequestsRouter };
+export {
+  router as exportRequestsRouter,
+  adminRouter as adminExportRequestsRouter,
+};

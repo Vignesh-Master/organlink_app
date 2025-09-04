@@ -6,7 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -91,7 +97,8 @@ export default function OrganizationProfile() {
     id: 1,
     name: "World Health Organization",
     type: "International Health Agency",
-    description: "The World Health Organization is a specialized agency of the United Nations responsible for international public health. We work worldwide to promote health, keep the world safe, and serve the vulnerable.",
+    description:
+      "The World Health Organization is a specialized agency of the United Nations responsible for international public health. We work worldwide to promote health, keep the world safe, and serve the vulnerable.",
     foundedYear: "1948",
     website: "https://www.who.int",
     email: "who@organlink.org",
@@ -127,7 +134,11 @@ export default function OrganizationProfile() {
     verification: {
       status: "verified",
       verifiedDate: "2024-01-16",
-      documents: ["Legal Registration", "Government Authorization", "Representative Credentials"],
+      documents: [
+        "Legal Registration",
+        "Government Authorization",
+        "Representative Credentials",
+      ],
     },
     socialMedia: {
       twitter: "https://twitter.com/WHO",
@@ -174,16 +185,16 @@ export default function OrganizationProfile() {
   };
 
   const updateField = (path: string, value: any) => {
-    setOrgData(prev => {
-      const keys = path.split('.');
+    setOrgData((prev) => {
+      const keys = path.split(".");
       const updated = { ...prev };
       let current: any = updated;
-      
+
       for (let i = 0; i < keys.length - 1; i++) {
         current[keys[i]] = { ...current[keys[i]] };
         current = current[keys[i]];
       }
-      
+
       current[keys[keys.length - 1]] = value;
       return updated;
     });
@@ -192,17 +203,20 @@ export default function OrganizationProfile() {
 
   const getVerificationColor = (status: string) => {
     switch (status) {
-      case "verified": return "text-green-600 bg-green-100";
-      case "pending": return "text-yellow-600 bg-yellow-100";
-      default: return "text-gray-600 bg-gray-100";
+      case "verified":
+        return "text-green-600 bg-green-100";
+      case "pending":
+        return "text-yellow-600 bg-yellow-100";
+      default:
+        return "text-gray-600 bg-gray-100";
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -215,13 +229,18 @@ export default function OrganizationProfile() {
         {/* Actions Bar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Badge className={getVerificationColor(orgData.verification.status)}>
+            <Badge
+              className={getVerificationColor(orgData.verification.status)}
+            >
               <Verified className="h-3 w-3 mr-1" />
-              {orgData.verification.status === "verified" ? "Verified Organization" : 
-               orgData.verification.status === "pending" ? "Verification Pending" : "Unverified"}
+              {orgData.verification.status === "verified"
+                ? "Verified Organization"
+                : orgData.verification.status === "pending"
+                  ? "Verification Pending"
+                  : "Unverified"}
             </Badge>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {editing ? (
               <>
@@ -277,7 +296,11 @@ export default function OrganizationProfile() {
                     <Avatar className="h-20 w-20">
                       <AvatarImage src="" alt={orgData.name} />
                       <AvatarFallback className="text-lg font-bold bg-medical-100 text-medical-700">
-                        {orgData.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                        {orgData.name
+                          .split(" ")
+                          .map((word) => word[0])
+                          .join("")
+                          .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     {editing && (
@@ -286,25 +309,25 @@ export default function OrganizationProfile() {
                       </button>
                     )}
                   </div>
-                  
+
                   <div className="flex-1 space-y-3">
                     <div>
                       <Label htmlFor="orgName">Organization Name</Label>
                       <Input
                         id="orgName"
                         value={orgData.name}
-                        onChange={(e) => updateField('name', e.target.value)}
+                        onChange={(e) => updateField("name", e.target.value)}
                         disabled={!editing}
                         className="font-semibold text-lg"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="orgType">Organization Type</Label>
                       <Input
                         id="orgType"
                         value={orgData.type}
-                        onChange={(e) => updateField('type', e.target.value)}
+                        onChange={(e) => updateField("type", e.target.value)}
                         disabled={!editing}
                       />
                     </div>
@@ -316,7 +339,7 @@ export default function OrganizationProfile() {
                   <Textarea
                     id="description"
                     value={orgData.description}
-                    onChange={(e) => updateField('description', e.target.value)}
+                    onChange={(e) => updateField("description", e.target.value)}
                     disabled={!editing}
                     rows={4}
                     className="resize-none"
@@ -329,23 +352,29 @@ export default function OrganizationProfile() {
                     <Input
                       id="foundedYear"
                       value={orgData.foundedYear}
-                      onChange={(e) => updateField('foundedYear', e.target.value)}
+                      onChange={(e) =>
+                        updateField("foundedYear", e.target.value)
+                      }
                       disabled={!editing}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="website">Website</Label>
                     <div className="flex gap-2">
                       <Input
                         id="website"
                         value={orgData.website}
-                        onChange={(e) => updateField('website', e.target.value)}
+                        onChange={(e) => updateField("website", e.target.value)}
                         disabled={!editing}
                       />
                       {!editing && orgData.website && (
                         <Button variant="outline" size="sm" asChild>
-                          <a href={orgData.website} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={orgData.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         </Button>
@@ -372,17 +401,17 @@ export default function OrganizationProfile() {
                       id="email"
                       type="email"
                       value={orgData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
+                      onChange={(e) => updateField("email", e.target.value)}
                       disabled={!editing}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
                       value={orgData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
+                      onChange={(e) => updateField("phone", e.target.value)}
                       disabled={!editing}
                     />
                   </div>
@@ -396,32 +425,42 @@ export default function OrganizationProfile() {
                     <Input
                       placeholder="Street Address"
                       value={orgData.address.street}
-                      onChange={(e) => updateField('address.street', e.target.value)}
+                      onChange={(e) =>
+                        updateField("address.street", e.target.value)
+                      }
                       disabled={!editing}
                     />
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <Input
                         placeholder="City"
                         value={orgData.address.city}
-                        onChange={(e) => updateField('address.city', e.target.value)}
+                        onChange={(e) =>
+                          updateField("address.city", e.target.value)
+                        }
                         disabled={!editing}
                       />
                       <Input
                         placeholder="State"
                         value={orgData.address.state}
-                        onChange={(e) => updateField('address.state', e.target.value)}
+                        onChange={(e) =>
+                          updateField("address.state", e.target.value)
+                        }
                         disabled={!editing}
                       />
                       <Input
                         placeholder="Country"
                         value={orgData.address.country}
-                        onChange={(e) => updateField('address.country', e.target.value)}
+                        onChange={(e) =>
+                          updateField("address.country", e.target.value)
+                        }
                         disabled={!editing}
                       />
                       <Input
                         placeholder="ZIP Code"
                         value={orgData.address.zipCode}
-                        onChange={(e) => updateField('address.zipCode', e.target.value)}
+                        onChange={(e) =>
+                          updateField("address.zipCode", e.target.value)
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -448,7 +487,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="primaryName"
                         value={orgData.representatives.primary.name}
-                        onChange={(e) => updateField('representatives.primary.name', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.primary.name",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -457,7 +501,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="primaryTitle"
                         value={orgData.representatives.primary.title}
-                        onChange={(e) => updateField('representatives.primary.title', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.primary.title",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -467,7 +516,12 @@ export default function OrganizationProfile() {
                         id="primaryEmail"
                         type="email"
                         value={orgData.representatives.primary.email}
-                        onChange={(e) => updateField('representatives.primary.email', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.primary.email",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -476,7 +530,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="primaryPhone"
                         value={orgData.representatives.primary.phone}
-                        onChange={(e) => updateField('representatives.primary.phone', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.primary.phone",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -494,7 +553,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="alternateName"
                         value={orgData.representatives.alternate.name}
-                        onChange={(e) => updateField('representatives.alternate.name', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.alternate.name",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -503,7 +567,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="alternateTitle"
                         value={orgData.representatives.alternate.title}
-                        onChange={(e) => updateField('representatives.alternate.title', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.alternate.title",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -513,7 +582,12 @@ export default function OrganizationProfile() {
                         id="alternateEmail"
                         type="email"
                         value={orgData.representatives.alternate.email}
-                        onChange={(e) => updateField('representatives.alternate.email', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.alternate.email",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -522,7 +596,12 @@ export default function OrganizationProfile() {
                       <Input
                         id="alternatePhone"
                         value={orgData.representatives.alternate.phone}
-                        onChange={(e) => updateField('representatives.alternate.phone', e.target.value)}
+                        onChange={(e) =>
+                          updateField(
+                            "representatives.alternate.phone",
+                            e.target.value,
+                          )
+                        }
                         disabled={!editing}
                       />
                     </div>
@@ -545,8 +624,10 @@ export default function OrganizationProfile() {
                     <Label htmlFor="twitter">Twitter</Label>
                     <Input
                       id="twitter"
-                      value={orgData.socialMedia.twitter || ''}
-                      onChange={(e) => updateField('socialMedia.twitter', e.target.value)}
+                      value={orgData.socialMedia.twitter || ""}
+                      onChange={(e) =>
+                        updateField("socialMedia.twitter", e.target.value)
+                      }
                       disabled={!editing}
                       placeholder="https://twitter.com/yourorg"
                     />
@@ -555,8 +636,10 @@ export default function OrganizationProfile() {
                     <Label htmlFor="linkedin">LinkedIn</Label>
                     <Input
                       id="linkedin"
-                      value={orgData.socialMedia.linkedin || ''}
-                      onChange={(e) => updateField('socialMedia.linkedin', e.target.value)}
+                      value={orgData.socialMedia.linkedin || ""}
+                      onChange={(e) =>
+                        updateField("socialMedia.linkedin", e.target.value)
+                      }
                       disabled={!editing}
                       placeholder="https://linkedin.com/company/yourorg"
                     />
@@ -583,31 +666,35 @@ export default function OrganizationProfile() {
                   </p>
                   <p className="text-sm text-gray-600">Proposals Created</p>
                 </div>
-                
+
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <p className="text-2xl font-bold text-green-600">
                     {orgData.statistics.votesParticipated}
                   </p>
                   <p className="text-sm text-gray-600">Votes Participated</p>
                 </div>
-                
+
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <p className="text-2xl font-bold text-blue-600">
                     {orgData.statistics.successRate}%
                   </p>
                   <p className="text-sm text-gray-600">Success Rate</p>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Joined:</span>
-                    <span className="font-medium">{formatDate(orgData.statistics.joinedDate)}</span>
+                    <span className="font-medium">
+                      {formatDate(orgData.statistics.joinedDate)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Last Active:</span>
-                    <span className="font-medium">{formatDate(orgData.statistics.lastActive)}</span>
+                    <span className="font-medium">
+                      {formatDate(orgData.statistics.lastActive)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -624,9 +711,11 @@ export default function OrganizationProfile() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-600">Verified Organization</span>
+                  <span className="font-medium text-green-600">
+                    Verified Organization
+                  </span>
                 </div>
-                
+
                 {orgData.verification.verifiedDate && (
                   <p className="text-sm text-gray-600">
                     Verified on {formatDate(orgData.verification.verifiedDate)}
@@ -637,7 +726,10 @@ export default function OrganizationProfile() {
                   <h4 className="font-medium mb-2">Verified Documents:</h4>
                   <div className="space-y-1">
                     {orgData.verification.documents.map((doc, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm"
+                      >
                         <CheckCircle className="h-3 w-3 text-green-600" />
                         <span>{doc}</span>
                       </div>
@@ -665,23 +757,29 @@ export default function OrganizationProfile() {
                   <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                   <div>
                     <p className="text-sm font-medium">Proposal Created</p>
-                    <p className="text-xs text-gray-600">Pediatric Priority Policy • 2 hours ago</p>
+                    <p className="text-xs text-gray-600">
+                      Pediatric Priority Policy • 2 hours ago
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                   <div>
                     <p className="text-sm font-medium">Vote Cast</p>
-                    <p className="text-xs text-gray-600">Geographic Proximity Rule • 1 day ago</p>
+                    <p className="text-xs text-gray-600">
+                      Geographic Proximity Rule • 1 day ago
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-gray-400 rounded-full mt-2"></div>
                   <div>
                     <p className="text-sm font-medium">Profile Updated</p>
-                    <p className="text-xs text-gray-600">Contact information • 3 days ago</p>
+                    <p className="text-xs text-gray-600">
+                      Contact information • 3 days ago
+                    </p>
                   </div>
                 </div>
 

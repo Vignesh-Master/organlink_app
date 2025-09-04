@@ -105,62 +105,92 @@ export default function OrganizationHelp() {
     {
       id: "1",
       question: "How do I create a new policy proposal?",
-      answer: "To create a new policy proposal, navigate to the 'Propose Policy' section in the sidebar. Fill in all required fields including title, rationale, and policy parameters. Your proposal will be uploaded to IPFS and recorded on the blockchain for transparency.",
+      answer:
+        "To create a new policy proposal, navigate to the 'Propose Policy' section in the sidebar. Fill in all required fields including title, rationale, and policy parameters. Your proposal will be uploaded to IPFS and recorded on the blockchain for transparency.",
       category: "proposals",
       tags: ["proposal", "create", "policy"],
     },
     {
       id: "2",
       question: "When can I vote on proposals?",
-      answer: "You can vote on proposals created by other organizations during their active voting period. Note that you cannot vote on proposals created by your own organization. Voting deadlines are clearly displayed in the dashboard.",
+      answer:
+        "You can vote on proposals created by other organizations during their active voting period. Note that you cannot vote on proposals created by your own organization. Voting deadlines are clearly displayed in the dashboard.",
       category: "voting",
       tags: ["voting", "deadline", "eligibility"],
     },
     {
       id: "3",
       question: "How is the voting outcome determined?",
-      answer: "A proposal passes if it receives 'For' votes from at least 50% of eligible organizations (excluding the proposer). The system takes a snapshot of active organizations at proposal creation time.",
+      answer:
+        "A proposal passes if it receives 'For' votes from at least 50% of eligible organizations (excluding the proposer). The system takes a snapshot of active organizations at proposal creation time.",
       category: "voting",
       tags: ["voting", "outcome", "majority"],
     },
     {
       id: "4",
       question: "What happens if I miss a voting deadline?",
-      answer: "If you miss a voting deadline, you cannot cast your vote for that proposal. The system will proceed to finalization with the votes received. We recommend enabling notifications to stay updated on upcoming deadlines.",
+      answer:
+        "If you miss a voting deadline, you cannot cast your vote for that proposal. The system will proceed to finalization with the votes received. We recommend enabling notifications to stay updated on upcoming deadlines.",
       category: "voting",
       tags: ["deadline", "missed", "notification"],
     },
     {
       id: "5",
       question: "How is blockchain used in the system?",
-      answer: "Blockchain ensures immutability and transparency. All proposals, votes, and finalizations are recorded on the Ethereum Sepolia testnet. Supporting documents are stored on IPFS with their CIDs recorded on-chain.",
+      answer:
+        "Blockchain ensures immutability and transparency. All proposals, votes, and finalizations are recorded on the Ethereum Sepolia testnet. Supporting documents are stored on IPFS with their CIDs recorded on-chain.",
       category: "technical",
       tags: ["blockchain", "transparency", "ipfs"],
     },
     {
       id: "6",
       question: "Can I change my vote after submission?",
-      answer: "No, votes are immutable once submitted to the blockchain. Please review your decision carefully before casting your vote. You can view proposal details and supporting documents before voting.",
+      answer:
+        "No, votes are immutable once submitted to the blockchain. Please review your decision carefully before casting your vote. You can view proposal details and supporting documents before voting.",
       category: "voting",
       tags: ["vote", "change", "immutable"],
     },
   ];
 
   const filteredFAQs = faqs.filter((faq) => {
-    const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         faq.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory;
+    const matchesSearch =
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.tags.some((tag) =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    const matchesCategory =
+      selectedCategory === "all" || faq.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const categories = [
     { id: "all", label: "All Topics", count: faqs.length },
-    { id: "proposals", label: "Proposals", count: faqs.filter(f => f.category === "proposals").length },
-    { id: "voting", label: "Voting", count: faqs.filter(f => f.category === "voting").length },
-    { id: "governance", label: "Governance", count: faqs.filter(f => f.category === "governance").length },
-    { id: "technical", label: "Technical", count: faqs.filter(f => f.category === "technical").length },
-    { id: "account", label: "Account", count: faqs.filter(f => f.category === "account").length },
+    {
+      id: "proposals",
+      label: "Proposals",
+      count: faqs.filter((f) => f.category === "proposals").length,
+    },
+    {
+      id: "voting",
+      label: "Voting",
+      count: faqs.filter((f) => f.category === "voting").length,
+    },
+    {
+      id: "governance",
+      label: "Governance",
+      count: faqs.filter((f) => f.category === "governance").length,
+    },
+    {
+      id: "technical",
+      label: "Technical",
+      count: faqs.filter((f) => f.category === "technical").length,
+    },
+    {
+      id: "account",
+      label: "Account",
+      count: faqs.filter((f) => f.category === "account").length,
+    },
   ];
 
   return (
@@ -314,7 +344,9 @@ export default function OrganizationHelp() {
             {filteredFAQs.length === 0 ? (
               <div className="text-center py-8">
                 <Search className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">No FAQs found matching your search.</p>
+                <p className="text-gray-600">
+                  No FAQs found matching your search.
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -385,9 +417,7 @@ export default function OrganizationHelp() {
                   Get help via email within 24 hours
                 </p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="mailto:support@organlink.org">
-                    Email Us
-                  </a>
+                  <a href="mailto:support@organlink.org">Email Us</a>
                 </Button>
               </div>
 
@@ -409,9 +439,7 @@ export default function OrganizationHelp() {
                   24/7 for critical issues
                 </p>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="mailto:emergency@organlink.org">
-                    Emergency Contact
-                  </a>
+                  <a href="mailto:emergency@organlink.org">Emergency Contact</a>
                 </Button>
               </div>
             </div>
@@ -433,7 +461,9 @@ export default function OrganizationHelp() {
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="font-medium">Blockchain Network</span>
                 </div>
-                <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                <Badge className="bg-green-100 text-green-800">
+                  Operational
+                </Badge>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -441,7 +471,9 @@ export default function OrganizationHelp() {
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="font-medium">IPFS Storage</span>
                 </div>
-                <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                <Badge className="bg-green-100 text-green-800">
+                  Operational
+                </Badge>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -449,12 +481,18 @@ export default function OrganizationHelp() {
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="font-medium">Database</span>
                 </div>
-                <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                <Badge className="bg-green-100 text-green-800">
+                  Operational
+                </Badge>
               </div>
             </div>
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm" asChild>
-                <a href="https://status.organlink.org" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://status.organlink.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View Full Status Page
                 </a>

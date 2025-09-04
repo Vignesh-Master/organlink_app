@@ -10,7 +10,14 @@ const CreateNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   message: z.string().min(1).max(1000),
   urgent: z.boolean().default(false),
-  category: z.enum(["general", "policy", "blockchain", "export", "security", "system"]),
+  category: z.enum([
+    "general",
+    "policy",
+    "blockchain",
+    "export",
+    "security",
+    "system",
+  ]),
   relatedId: z.string().optional(),
   actionUrl: z.string().optional(),
   actionLabel: z.string().optional(),
@@ -30,7 +37,7 @@ router.get("/", async (req, res) => {
   try {
     const userType = req.headers["x-user-type"] as string;
     const userId = req.user?.id; // From auth middleware
-    
+
     let query = `
       SELECT * FROM notifications 
       WHERE recipient_type = $1 
@@ -39,10 +46,10 @@ router.get("/", async (req, res) => {
       ORDER BY created_at DESC
       LIMIT 100
     `;
-    
+
     const result = await pool.query(query, [userType, userId]);
-    
-    const notifications = result.rows.map(row => ({
+
+    const notifications = result.rows.map((row) => ({
       id: row.id,
       type: row.type,
       title: row.title,
@@ -63,7 +70,7 @@ router.get("/", async (req, res) => {
     res.json({
       success: true,
       notifications,
-      unreadCount: notifications.filter(n => !n.read).length,
+      unreadCount: notifications.filter((n) => !n.read).length,
     });
   } catch (error) {
     console.error("Get notifications error:", error);
@@ -78,7 +85,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const validatedData = CreateNotificationSchema.parse(req.body);
-    
+
     const result = await pool.query(
       `INSERT INTO notifications (
         type, title, message, urgent, category, related_id, action_url, action_label,
@@ -98,7 +105,7 @@ router.post("/", async (req, res) => {
         validatedData.expiresAt,
         validatedData.recipientType,
         validatedData.recipientId,
-      ]
+      ],
     );
 
     res.json({
@@ -127,7 +134,7 @@ router.patch("/:notificationId", async (req, res) => {
   try {
     const { notificationId } = req.params;
     const validatedData = UpdateNotificationSchema.parse(req.body);
-    
+
     const updateFields = [];
     const values = [];
     let paramIndex = 1;
@@ -136,7 +143,7 @@ router.patch("/:notificationId", async (req, res) => {
       updateFields.push(`read = $${paramIndex++}`);
       values.push(validatedData.read);
     }
-    
+
     if (validatedData.urgent !== undefined) {
       updateFields.push(`urgent = $${paramIndex++}`);
       values.push(validatedData.urgent);
@@ -201,7 +208,7 @@ router.post("/mark-all-read", async (req, res) => {
        WHERE recipient_type = $1 
        AND (recipient_id IS NULL OR recipient_id = $2)
        AND read = false`,
-      [userType, userId]
+      [userType, userId],
     );
 
     res.json({
@@ -221,10 +228,10 @@ router.post("/mark-all-read", async (req, res) => {
 router.delete("/:notificationId", async (req, res) => {
   try {
     const { notificationId } = req.params;
-    
+
     const result = await pool.query(
       "DELETE FROM notifications WHERE id = $1 RETURNING id",
-      [notificationId]
+      [notificationId],
     );
 
     if (result.rows.length === 0) {
@@ -251,7 +258,7 @@ router.delete("/:notificationId", async (req, res) => {
 router.post("/cleanup", async (req, res) => {
   try {
     const result = await pool.query(
-      "DELETE FROM notifications WHERE expires_at < NOW() RETURNING COUNT(*)"
+      "DELETE FROM notifications WHERE expires_at < NOW() RETURNING COUNT(*)",
     );
 
     res.json({
