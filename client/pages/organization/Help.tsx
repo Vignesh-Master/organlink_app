@@ -24,6 +24,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Info,
+  Bell,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 
