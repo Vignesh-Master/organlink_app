@@ -31,6 +31,7 @@ import testBlockchainRoutes from "./routes/test-blockchain";
 import testIpfsRoutes from "./routes/test-ipfs";
 import signatureAttestationRoutes from "./routes/signature-attestation";
 import policyGovernanceRoutes from "./routes/policy-governance";
+import aiMatchingRoutes from "./routes/ai-matching";
 
 export function createServer() {
   const app = express();
