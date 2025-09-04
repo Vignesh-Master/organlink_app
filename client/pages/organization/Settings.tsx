@@ -786,15 +786,18 @@ export default function OrganizationSettings() {
                       Export your organization's data including proposals, votes, and activity history.
                     </p>
                     <div className="flex gap-2">
-                      <Button variant="outline">
-                        <Download className="h-4 w-4 mr-2" />
-                        Export Data
-                      </Button>
-                      <Button variant="outline">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Import Settings
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setExportModalOpen(true)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Data
+                    </Button>
+                    <Button variant="outline">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import Settings
+                    </Button>
+                  </div>
                   </CardContent>
                 </Card>
 
