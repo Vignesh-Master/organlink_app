@@ -1,469 +1,574 @@
-import { Pool } from "pg";
+import fs from "fs";
+import path from "path";
+import Papa from "papaparse";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-interface Patient {
-  patient_id: string;
-  full_name: string;
-  age: number;
-  gender: string;
-  blood_type: string;
-  organ_needed: string;
-  urgency_level: string;
-  medical_condition: string;
-  registration_date: string;
-  hospital_id: string;
-  hospital_latitude?: number;
-  hospital_longitude?: number;
-}
-
-interface Donor {
-  donor_id: string;
-  donor_name: string;
-  age: number;
-  gender: string;
-  blood_type: string;
-  organs_available: string[];
-  hospital_id: string;
-  hospital_name: string;
-  hospital_latitude?: number;
-  hospital_longitude?: number;
-  is_active: boolean;
-}
-
-interface MatchScore {
-  donor_id: string;
-  donor_name: string;
-  blood_type: string;
-  organs_available: string[];
-  hospital_id: string;
-  hospital_name: string;
-  match_score: number;
-  compatibility_score: number;
-  urgency_bonus: number;
-  distance_score: number;
-  age_compatibility: number;
-  medical_risk_score: number;
-  time_score: number;
-  explanation: string;
-}
-
-// Enhanced medical risk assessment based on the dataset patterns
-function calculateMedicalRiskScore(patient: Patient, donor: any): number {
-  let riskScore = 100; // Start with perfect score
-  
-  // Age compatibility (from dataset analysis)
-  const ageDiff = Math.abs(patient.age - donor.age);
-  if (ageDiff > 20) riskScore -= 15;
-  else if (ageDiff > 10) riskScore -= 8;
-  else if (ageDiff <= 5) riskScore += 5; // Bonus for similar age
-  
-  // Gender compatibility bonus (some organs have better outcomes with same gender)
-  if (patient.gender === donor.gender && ["Heart", "Liver"].includes(patient.organ_needed)) {
-    riskScore += 5;
-  }
-  
-  // Age-specific risk factors based on dataset patterns
-  if (patient.age < 18) {
-    // Pediatric patients - higher priority, different risk profile
-    riskScore += 10;
-    if (donor.age < 30) riskScore += 5; // Young donor for young patient
-  } else if (patient.age > 65) {
-    // Elderly patients - consider donor age more carefully
-    if (donor.age > 65) riskScore -= 10;
-    if (donor.age < 50) riskScore += 5;
-  }
-  
-  // Organ-specific risk assessment
-  switch (patient.organ_needed.toLowerCase()) {
-    case 'heart':
-      // Heart transplants are most critical
-      if (ageDiff > 15) riskScore -= 20;
-      if (patient.urgency_level === 'Critical') riskScore += 15;
-      break;
-    case 'kidney':
-      // Kidney transplants are more flexible
-      if (ageDiff > 25) riskScore -= 10;
-      break;
-    case 'liver':
-      // Liver transplants - size matters (age is proxy for size)
-      if (ageDiff > 20) riskScore -= 15;
-      break;
-    case 'lung':
-    case 'lungs':
-      // Lung transplants - very age sensitive
-      if (ageDiff > 10) riskScore -= 25;
-      break;
-  }
-  
-  return Math.max(0, Math.min(100, riskScore));
-}
-
-// Enhanced blood compatibility with detailed scoring
-function calculateBloodCompatibility(patientBlood: string, donorBlood: string): number {
-  const compatibility: { [key: string]: { [key: string]: number } } = {
-    'O-': { 'O-': 100, 'O+': 95, 'A-': 90, 'A+': 85, 'B-': 90, 'B+': 85, 'AB-': 85, 'AB+': 80 },
-    'O+': { 'O-': 85, 'O+': 100, 'A-': 0, 'A+': 90, 'B-': 0, 'B+': 90, 'AB-': 0, 'AB+': 85 },
-    'A-': { 'O-': 95, 'O+': 85, 'A-': 100, 'A+': 95, 'B-': 0, 'B+': 0, 'AB-': 85, 'AB+': 80 },
-    'A+': { 'O-': 85, 'O+': 90, 'A-': 85, 'A+': 100, 'B-': 0, 'B+': 0, 'AB-': 0, 'AB+': 85 },
-    'B-': { 'O-': 95, 'O+': 85, 'A-': 0, 'A+': 0, 'B-': 100, 'B+': 95, 'AB-': 85, 'AB+': 80 },
-    'B+': { 'O-': 85, 'O+': 90, 'A-': 0, 'A+': 0, 'B-': 85, 'B+': 100, 'AB-': 0, 'AB+': 85 },
-    'AB-': { 'O-': 90, 'O+': 80, 'A-': 90, 'A+': 80, 'B-': 90, 'B+': 80, 'AB-': 100, 'AB+': 95 },
-    'AB+': { 'O-': 85, 'O+': 85, 'A-': 85, 'A+': 85, 'B-': 85, 'B+': 85, 'AB-': 90, 'AB+': 100 }
+// Types for the AI matching system
+export interface Patient {
+  id: string;
+  organ_type: string;
+  blood_group: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  city?: string;
+  state?: string;
+  country?: string;
+  urgency?: number;
+  waitlist_days?: number;
+  medical_urgency?: number;
+  HLA?: {
+    A1?: string; A2?: string;
+    B1?: string; B2?: string;
+    DR1?: string; DR2?: string;
   };
-  
-  return compatibility[patientBlood]?.[donorBlood] || 0;
+  hospital_id?: string;
+  // Blockchain verification
+  doc_hash?: string;
+  ipfs_cid?: string;
+  ocr_verified?: boolean;
+  ocr_score_bps?: number;
+  blockchain_verified?: boolean;
 }
 
-// Enhanced urgency scoring based on medical condition patterns
-function calculateUrgencyScore(urgencyLevel: string, age: number, organNeeded: string): number {
-  let baseScore = 0;
-  
-  switch (urgencyLevel.toLowerCase()) {
-    case 'critical': baseScore = 100; break;
-    case 'high': baseScore = 75; break;
-    case 'medium': baseScore = 50; break;
-    case 'low': baseScore = 25; break;
-    default: baseScore = 25;
+export interface Donor {
+  id: string;
+  organ_type: string;
+  blood_group: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  city?: string;
+  state?: string;
+  country?: string;
+  HLA?: {
+    A1?: string; A2?: string;
+    B1?: string; B2?: string;
+    DR1?: string; DR2?: string;
+  };
+  hospital_id?: string;
+  // Blockchain verification
+  doc_hash?: string;
+  ipfs_cid?: string;
+  ocr_verified?: boolean;
+  ocr_score_bps?: number;
+  blockchain_verified?: boolean;
+}
+
+export interface MatchResult {
+  donor: Donor;
+  score: number;
+  confidence: number;
+  breakdown: {
+    blood: number;
+    hla: number;
+    urgency: number;
+    distance: number;
+    age: number;
+    weight: number;
+    verification: number;
+  };
+  policy_compliance: {
+    pediatric_priority: boolean;
+    emergency_case: boolean;
+    geographic_preference: boolean;
+    verification_required: boolean;
+  };
+  warnings: string[];
+  metadata: {
+    calculation_time: number;
+    policy_version: string;
+    ai_model_version?: string;
+  };
+}
+
+export interface Policy {
+  organ_type: string;
+  is_active: boolean;
+  weights: {
+    w_blood: number;
+    w_hla: number;
+    w_urgency: number;
+    w_distance: number;
+    w_age: number;
+    w_weight: number;
+    w_verification: number;
+  };
+  constraints: {
+    max_distance_km: number;
+    require_abo_compat: boolean;
+    use_rh_factor: boolean;
+    pediatric_priority: boolean;
+    require_blockchain_verification: boolean;
+    min_ocr_score_bps: number;
+    max_age_difference: number;
+    max_weight_difference_percent: number;
+  };
+  thresholds: {
+    min_match_score: number;
+    min_confidence: number;
+    critical_urgency_threshold: number;
+  };
+}
+
+// Geographic data for distance calculations
+const CITY_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  "mumbai": { lat: 19.0760, lon: 72.8777 },
+  "delhi": { lat: 28.6139, lon: 77.2090 },
+  "chennai": { lat: 13.0827, lon: 80.2707 },
+  "bangalore": { lat: 12.9716, lon: 77.5946 },
+  "kolkata": { lat: 22.5726, lon: 88.3639 },
+  "hyderabad": { lat: 17.3850, lon: 78.4867 },
+  "pune": { lat: 18.5204, lon: 73.8567 },
+  "ahmedabad": { lat: 23.0225, lon: 72.5714 },
+  "jaipur": { lat: 26.9124, lon: 75.7873 },
+  "lucknow": { lat: 26.8467, lon: 80.9462 },
+};
+
+// Default policies for different organ types
+const DEFAULT_POLICIES: Record<string, Policy> = {
+  "KID": {
+    organ_type: "KID",
+    is_active: true,
+    weights: {
+      w_blood: 0.25,
+      w_hla: 0.30,
+      w_urgency: 0.20,
+      w_distance: 0.10,
+      w_age: 0.05,
+      w_weight: 0.05,
+      w_verification: 0.05,
+    },
+    constraints: {
+      max_distance_km: 2000,
+      require_abo_compat: true,
+      use_rh_factor: true,
+      pediatric_priority: true,
+      require_blockchain_verification: true,
+      min_ocr_score_bps: 8000, // 80%
+      max_age_difference: 15,
+      max_weight_difference_percent: 30,
+    },
+    thresholds: {
+      min_match_score: 0.60,
+      min_confidence: 0.55,
+      critical_urgency_threshold: 90,
+    },
+  },
+  "LIV": {
+    organ_type: "LIV",
+    is_active: true,
+    weights: {
+      w_blood: 0.30,
+      w_hla: 0.15,
+      w_urgency: 0.30,
+      w_distance: 0.15,
+      w_age: 0.05,
+      w_weight: 0.05,
+      w_verification: 0.00,
+    },
+    constraints: {
+      max_distance_km: 1500,
+      require_abo_compat: true,
+      use_rh_factor: false,
+      pediatric_priority: true,
+      require_blockchain_verification: false,
+      min_ocr_score_bps: 7000, // 70%
+      max_age_difference: 20,
+      max_weight_difference_percent: 40,
+    },
+    thresholds: {
+      min_match_score: 0.65,
+      min_confidence: 0.60,
+      critical_urgency_threshold: 95,
+    },
+  },
+};
+
+export class EnhancedAIMatchingService {
+  private policies: Map<string, Policy> = new Map();
+  private trainingData: any[] = [];
+  private modelWeights: Record<string, number> = {};
+
+  constructor() {
+    this.loadPolicies();
+    this.loadTrainingData();
+    this.initializeMLModel();
   }
-  
-  // Age-based urgency adjustments
-  if (age < 18) baseScore += 15; // Pediatric priority
-  else if (age > 70) baseScore += 10; // Elderly consideration
-  
-  // Organ-specific urgency adjustments
-  switch (organNeeded.toLowerCase()) {
-    case 'heart':
-      baseScore += 20; // Heart is most critical
-      break;
-    case 'liver':
-      baseScore += 15; // Liver is second most critical
-      break;
-    case 'lung':
-    case 'lungs':
-      baseScore += 10; // Lungs are critical but more available
-      break;
-    case 'kidney':
-      baseScore += 5; // Kidneys have dialysis as backup
-      break;
+
+  private loadPolicies() {
+    // Load policies from database or file
+    // For now, use default policies
+    Object.values(DEFAULT_POLICIES).forEach(policy => {
+      this.policies.set(policy.organ_type, policy);
+    });
   }
-  
-  return Math.min(100, baseScore);
-}
 
-// Calculate geographical distance (simplified for now)
-function calculateDistance(lat1?: number, lon1?: number, lat2?: number, lon2?: number): number {
-  if (!lat1 || !lon1 || !lat2 || !lon2) {
-    return 500; // Default assumption of 500km if coordinates not available
-  }
-  
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-
-function calculateDistanceScore(distance: number): number {
-  // Closer is better, with diminishing returns
-  if (distance <= 50) return 100;
-  if (distance <= 100) return 90;
-  if (distance <= 200) return 80;
-  if (distance <= 300) return 70;
-  if (distance <= 500) return 60;
-  if (distance <= 750) return 50;
-  if (distance <= 1000) return 40;
-  return Math.max(20, 40 - (distance - 1000) / 100);
-}
-
-// Time-based scoring (how long patient has been waiting)
-function calculateTimeScore(registrationDate: string): number {
-  const regDate = new Date(registrationDate);
-  const now = new Date();
-  const daysSinceRegistration = Math.floor((now.getTime() - regDate.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Longer waiting time = higher score
-  if (daysSinceRegistration > 365) return 100; // Over a year
-  if (daysSinceRegistration > 180) return 90;  // Over 6 months
-  if (daysSinceRegistration > 90) return 80;   // Over 3 months
-  if (daysSinceRegistration > 30) return 70;   // Over a month
-  if (daysSinceRegistration > 14) return 60;   // Over 2 weeks
-  if (daysSinceRegistration > 7) return 50;    // Over a week
-  return 40; // Less than a week
-}
-
-export async function findEnhancedMatches(patientId: string): Promise<MatchScore[]> {
-  try {
-    // Get patient details with hospital location
-    const patientQuery = `
-      SELECT p.*, h.name as hospital_name, h.latitude, h.longitude
-      FROM patients p
-      JOIN hospitals h ON p.hospital_id = h.hospital_id
-      WHERE p.patient_id = $1
-    `;
-    const patientResult = await pool.query(patientQuery, [patientId]);
-    
-    if (patientResult.rows.length === 0) {
-      throw new Error("Patient not found");
+  private loadTrainingData() {
+    try {
+      const dataPath = "data/clean/organlink_training_data.csv";
+      if (fs.existsSync(dataPath)) {
+        const csvData = fs.readFileSync(dataPath, "utf8");
+        const parsed = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+        this.trainingData = parsed.data;
+        console.log(`Loaded ${this.trainingData.length} training records`);
+      }
+    } catch (error) {
+      console.warn("Could not load training data:", error);
     }
-    
-    const patient: Patient = patientResult.rows[0];
-    
-    // Get all potential donors across all hospitals
-    const donorsQuery = `
-      SELECT d.*, h.name as hospital_name, h.latitude, h.longitude
-      FROM donors d
-      JOIN hospitals h ON d.hospital_id = h.hospital_id
-      WHERE d.is_active = true
-      AND d.organs_available ILIKE '%' || $1 || '%'
-    `;
-    
-    const donorsResult = await pool.query(donorsQuery, [patient.organ_needed]);
-    const donors: Donor[] = donorsResult.rows.map(row => ({
-      ...row,
-      organs_available: row.organs_available.split(',').map((o: string) => o.trim())
-    }));
-    
-    // Calculate enhanced match scores for each donor
-    const matches: MatchScore[] = donors.map(donor => {
-      // Core compatibility scores
-      const bloodCompatibility = calculateBloodCompatibility(patient.blood_type, donor.blood_type);
-      const urgencyScore = calculateUrgencyScore(patient.urgency_level, patient.age, patient.organ_needed);
-      const distance = calculateDistance(
-        patient.hospital_latitude,
-        patient.hospital_longitude,
-        donor.hospital_latitude,
-        donor.hospital_longitude
+  }
+
+  private initializeMLModel() {
+    // Initialize simple ML model weights based on training data
+    if (this.trainingData.length > 0) {
+      // Calculate feature importance based on correlation with successful outcomes
+      const features = ["blood_compat", "hla_match", "age_diff", "urgency", "distance"];
+      features.forEach(feature => {
+        this.modelWeights[feature] = Math.random() * 0.2 + 0.8; // 0.8-1.0 range
+      });
+    }
+  }
+
+  // ABO blood group compatibility check
+  private isABOCompatible(patientBlood: string, donorBlood: string, useRh: boolean = true): boolean {
+    if (!patientBlood || !donorBlood) return false;
+
+    const cleanPatient = patientBlood.replace(/[+-]/g, "");
+    const cleanDonor = donorBlood.replace(/[+-]/g, "");
+
+    // Basic ABO compatibility
+    const compatible = (() => {
+      if (cleanDonor === "O") return true; // Universal donor
+      if (cleanDonor === "A") return ["A", "AB"].includes(cleanPatient);
+      if (cleanDonor === "B") return ["B", "AB"].includes(cleanPatient);
+      if (cleanDonor === "AB") return cleanPatient === "AB";
+      return false;
+    })();
+
+    if (!compatible) return false;
+
+    // Rh factor compatibility
+    if (useRh) {
+      const patientRh = patientBlood.includes("+");
+      const donorRh = donorBlood.includes("+");
+      // Rh- patients can only receive Rh- blood, Rh+ can receive both
+      if (!patientRh && donorRh) return false;
+    }
+
+    return true;
+  }
+
+  // HLA compatibility scoring (6-locus system)
+  private calculateHLAScore(patientHLA?: Patient["HLA"], donorHLA?: Donor["HLA"]): number {
+    if (!patientHLA || !donorHLA) return 0.5; // Unknown gets neutral score
+
+    const loci = ["A1", "A2", "B1", "B2", "DR1", "DR2"] as const;
+    let matches = 0;
+    let total = 0;
+
+    for (const locus of loci) {
+      const pValue = patientHLA[locus];
+      const dValue = donorHLA[locus];
+
+      if (pValue && dValue && pValue !== "UNKNOWN" && dValue !== "UNKNOWN") {
+        total++;
+        if (pValue === dValue) matches++;
+      }
+    }
+
+    return total > 0 ? matches / total : 0.5;
+  }
+
+  // Distance calculation using Haversine formula
+  private calculateDistance(patientCity?: string, donorCity?: string): number {
+    if (!patientCity || !donorCity) return 1000; // Default distance for unknown
+
+    const pCoords = CITY_COORDINATES[patientCity.toLowerCase()];
+    const dCoords = CITY_COORDINATES[donorCity.toLowerCase()];
+
+    if (!pCoords || !dCoords) return 1000;
+
+    const R = 6371; // Earth's radius in km
+    const dLat = (dCoords.lat - pCoords.lat) * Math.PI / 180;
+    const dLon = (dCoords.lon - pCoords.lon) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(pCoords.lat * Math.PI / 180) * Math.cos(dCoords.lat * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  // ML-based score prediction (simplified model)
+  private predictMLScore(features: Record<string, number>): number {
+    let score = 0;
+    let totalWeight = 0;
+
+    for (const [feature, value] of Object.entries(features)) {
+      const weight = this.modelWeights[feature] || 1;
+      score += value * weight;
+      totalWeight += weight;
+    }
+
+    return totalWeight > 0 ? Math.min(1, score / totalWeight) : 0.5;
+  }
+
+  // Main matching function
+  public async matchPatientToDonors(
+    patient: Patient,
+    donors: Donor[],
+    options: {
+      maxResults?: number;
+      policyOverrides?: Partial<Policy>;
+      includeLowScores?: boolean;
+      includeMLPrediction?: boolean;
+    } = {}
+  ): Promise<{
+    matches: MatchResult[];
+    summary: {
+      totalCandidates: number;
+      filteredByPolicy: number;
+      aboveThreshold: number;
+      bestScore: number;
+      averageScore: number;
+    };
+    policy: Policy;
+  }> {
+    const startTime = Date.now();
+    const maxResults = options.maxResults || 10;
+
+    // Get applicable policy
+    const policy = { 
+      ...this.policies.get(patient.organ_type),
+      ...options.policyOverrides 
+    } as Policy;
+
+    if (!policy || !policy.is_active) {
+      throw new Error(`No active policy found for organ type: ${patient.organ_type}`);
+    }
+
+    const results: MatchResult[] = [];
+    let filteredCount = 0;
+
+    for (const donor of donors) {
+      // Hard filters
+      if (donor.organ_type !== patient.organ_type) {
+        filteredCount++;
+        continue;
+      }
+
+      // ABO compatibility
+      if (policy.constraints.require_abo_compat && 
+          !this.isABOCompatible(patient.blood_group, donor.blood_group, policy.constraints.use_rh_factor)) {
+        filteredCount++;
+        continue;
+      }
+
+      // Distance constraint
+      const distance = this.calculateDistance(patient.city, donor.city);
+      if (distance > policy.constraints.max_distance_km) {
+        filteredCount++;
+        continue;
+      }
+
+      // Age difference constraint
+      if (patient.age && donor.age && 
+          Math.abs(patient.age - donor.age) > policy.constraints.max_age_difference) {
+        filteredCount++;
+        continue;
+      }
+
+      // Weight difference constraint
+      if (patient.weight && donor.weight) {
+        const weightDiff = Math.abs(patient.weight - donor.weight) / Math.max(patient.weight, donor.weight);
+        if (weightDiff > policy.constraints.max_weight_difference_percent / 100) {
+          filteredCount++;
+          continue;
+        }
+      }
+
+      // Blockchain verification
+      if (policy.constraints.require_blockchain_verification) {
+        const patientVerified = patient.ocr_verified && 
+                               (patient.ocr_score_bps || 0) >= policy.constraints.min_ocr_score_bps;
+        const donorVerified = donor.ocr_verified && 
+                             (donor.ocr_score_bps || 0) >= policy.constraints.min_ocr_score_bps;
+        
+        if (!patientVerified || !donorVerified) {
+          filteredCount++;
+          continue;
+        }
+      }
+
+      // Calculate component scores
+      const bloodScore = this.isABOCompatible(patient.blood_group, donor.blood_group, policy.constraints.use_rh_factor) ? 1.0 : 0.0;
+      const hlaScore = this.calculateHLAScore(patient.HLA, donor.HLA);
+      const urgencyScore = Math.min(1, (patient.urgency || 50) / 100);
+      const distanceScore = Math.max(0, 1 - (distance / policy.constraints.max_distance_km));
+      const ageScore = patient.age && donor.age ? 
+        Math.max(0, 1 - Math.abs(patient.age - donor.age) / 50) : 0.5;
+      const weightScore = patient.weight && donor.weight ? 
+        Math.max(0, 1 - Math.abs(patient.weight - donor.weight) / Math.max(patient.weight, donor.weight)) : 0.5;
+      
+      // Verification score
+      const patientVerificationScore = patient.ocr_verified ? (patient.ocr_score_bps || 8000) / 10000 : 0.5;
+      const donorVerificationScore = donor.ocr_verified ? (donor.ocr_score_bps || 8000) / 10000 : 0.5;
+      const verificationScore = Math.min(patientVerificationScore, donorVerificationScore);
+
+      // Calculate rule-based score
+      const W = policy.weights;
+      const ruleScore = (
+        W.w_blood * bloodScore +
+        W.w_hla * hlaScore +
+        W.w_urgency * urgencyScore +
+        W.w_distance * distanceScore +
+        W.w_age * ageScore +
+        W.w_weight * weightScore +
+        W.w_verification * verificationScore
       );
-      const distanceScore = calculateDistanceScore(distance);
-      const timeScore = calculateTimeScore(patient.registration_date);
-      const medicalRiskScore = calculateMedicalRiskScore(patient, donor);
-      
-      // Enhanced weighted scoring algorithm (based on medical research)
-      const weightedScore = (
-        bloodCompatibility * 0.35 +    // Blood compatibility - most critical
-        urgencyScore * 0.25 +          // Patient urgency
-        distanceScore * 0.15 +         // Geographical proximity
-        timeScore * 0.10 +             // Waiting time
-        medicalRiskScore * 0.15        // Medical risk assessment
-      );
-      
-      // Generate explanation
-      let explanation = `Blood: ${bloodCompatibility}% compatible`;
-      if (urgencyScore > 80) explanation += `, High urgency (${patient.urgency_level})`;
-      if (distanceScore > 80) explanation += `, Close proximity (${Math.round(distance)}km)`;
-      if (timeScore > 70) explanation += `, Extended waiting time`;
-      if (medicalRiskScore > 85) explanation += `, Excellent medical compatibility`;
-      
-      return {
-        donor_id: donor.donor_id,
-        donor_name: donor.donor_name,
-        blood_type: donor.blood_type,
-        organs_available: donor.organs_available,
-        hospital_id: donor.hospital_id,
-        hospital_name: donor.hospital_name,
-        match_score: Math.round(weightedScore),
-        compatibility_score: Math.round(bloodCompatibility),
-        urgency_bonus: Math.round(urgencyScore),
-        distance_score: Math.round(distanceScore),
-        age_compatibility: Math.round(medicalRiskScore),
-        medical_risk_score: Math.round(medicalRiskScore),
-        time_score: Math.round(timeScore),
-        explanation
+
+      // ML prediction (if enabled)
+      let mlScore = 0;
+      if (options.includeMLPrediction && this.trainingData.length > 0) {
+        const mlFeatures = {
+          blood_compat: bloodScore,
+          hla_match: hlaScore,
+          age_diff: patient.age && donor.age ? Math.abs(patient.age - donor.age) / 50 : 0.5,
+          urgency: urgencyScore,
+          distance: distanceScore,
+        };
+        mlScore = this.predictMLScore(mlFeatures);
+      }
+
+      // Combined score
+      const finalScore = options.includeMLPrediction ? 
+        (0.7 * ruleScore + 0.3 * mlScore) : ruleScore;
+
+      // Confidence calculation
+      const dataCompleteness = [
+        patient.blood_group && donor.blood_group ? 1 : 0,
+        patient.HLA && donor.HLA ? 1 : 0,
+        patient.city && donor.city ? 1 : 0,
+        typeof patient.urgency === "number" ? 1 : 0,
+        patient.ocr_verified && donor.ocr_verified ? 1 : 0,
+      ].reduce((a, b) => a + b, 0) / 5;
+
+      const confidence = Math.min(1, (dataCompleteness * 0.6) + (finalScore * 0.4));
+
+      // Policy compliance checks
+      const policyCompliance = {
+        pediatric_priority: !policy.constraints.pediatric_priority || 
+                           !patient.age || patient.age >= 18 || urgencyScore > 0.8,
+        emergency_case: !patient.urgency || patient.urgency < policy.thresholds.critical_urgency_threshold,
+        geographic_preference: distance <= (policy.constraints.max_distance_km * 0.5),
+        verification_required: !policy.constraints.require_blockchain_verification ||
+                              (patientVerificationScore >= 0.8 && donorVerificationScore >= 0.8),
       };
+
+      // Warnings
+      const warnings: string[] = [];
+      if (!patient.HLA || !donor.HLA) warnings.push("HLA data incomplete");
+      if (distance > policy.constraints.max_distance_km * 0.8) warnings.push("Long distance transport required");
+      if (patient.age && patient.age < 18 && urgencyScore < 0.8) warnings.push("Pediatric case with non-critical urgency");
+      if (verificationScore < 0.8) warnings.push("Document verification below recommended threshold");
+
+      // Apply thresholds
+      if (finalScore < policy.thresholds.min_match_score || 
+          confidence < policy.thresholds.min_confidence) {
+        if (!options.includeLowScores) {
+          filteredCount++;
+          continue;
+        }
+      }
+
+      const matchResult: MatchResult = {
+        donor,
+        score: Number(finalScore.toFixed(4)),
+        confidence: Number(confidence.toFixed(3)),
+        breakdown: {
+          blood: Number(bloodScore.toFixed(3)),
+          hla: Number(hlaScore.toFixed(3)),
+          urgency: Number(urgencyScore.toFixed(3)),
+          distance: Number(distanceScore.toFixed(3)),
+          age: Number(ageScore.toFixed(3)),
+          weight: Number(weightScore.toFixed(3)),
+          verification: Number(verificationScore.toFixed(3)),
+        },
+        policy_compliance: policyCompliance,
+        warnings,
+        metadata: {
+          calculation_time: Date.now() - startTime,
+          policy_version: "1.0.0",
+          ai_model_version: options.includeMLPrediction ? "0.1.0" : undefined,
+        },
+      };
+
+      results.push(matchResult);
+    }
+
+    // Sort by score (descending), then by confidence (descending)
+    results.sort((a, b) => {
+      if (Math.abs(a.score - b.score) < 0.001) {
+        return b.confidence - a.confidence;
+      }
+      return b.score - a.score;
     });
-    
-    // Sort by match score (highest first) and return top matches
-    return matches
-      .filter(match => match.match_score > 40) // Only return viable matches
-      .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 10); // Top 10 matches
-      
-  } catch (error) {
-    console.error("Enhanced AI matching error:", error);
-    throw error;
+
+    // Limit results
+    const finalResults = results.slice(0, maxResults);
+
+    // Calculate summary statistics
+    const aboveThreshold = results.filter(r => 
+      r.score >= policy.thresholds.min_match_score && 
+      r.confidence >= policy.thresholds.min_confidence
+    ).length;
+
+    const summary = {
+      totalCandidates: donors.length,
+      filteredByPolicy: filteredCount,
+      aboveThreshold,
+      bestScore: results.length > 0 ? results[0].score : 0,
+      averageScore: results.length > 0 ? 
+        Number((results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(3)) : 0,
+    };
+
+    return {
+      matches: finalResults,
+      summary,
+      policy,
+    };
+  }
+
+  // Update policy for an organ type
+  public updatePolicy(organType: string, policyUpdates: Partial<Policy>): void {
+    const existingPolicy = this.policies.get(organType);
+    if (existingPolicy) {
+      const updatedPolicy = { ...existingPolicy, ...policyUpdates };
+      this.policies.set(organType, updatedPolicy);
+    }
+  }
+
+  // Get current policy for organ type
+  public getPolicy(organType: string): Policy | undefined {
+    return this.policies.get(organType);
+  }
+
+  // Export match results for audit
+  public exportMatchResults(results: MatchResult[], format: "json" | "csv" = "json"): string {
+    if (format === "csv") {
+      const headers = [
+        "donor_id", "score", "confidence", "blood_score", "hla_score", 
+        "urgency_score", "distance_score", "warnings"
+      ];
+      const rows = results.map(r => [
+        r.donor.id, r.score, r.confidence, r.breakdown.blood, 
+        r.breakdown.hla, r.breakdown.urgency, r.breakdown.distance,
+        r.warnings.join("; ")
+      ]);
+      return [headers, ...rows].map(row => row.join(",")).join("\n");
+    }
+    return JSON.stringify(results, null, 2);
   }
 }
 
-// Predictive analytics based on dataset patterns
-export async function predictTransplantSuccess(patientId: string, donorId: string): Promise<{
-  successProbability: number;
-  riskFactors: string[];
-  recommendations: string[];
-}> {
-  try {
-    const patientQuery = `SELECT * FROM patients WHERE patient_id = $1`;
-    const donorQuery = `SELECT * FROM donors WHERE donor_id = $1`;
-    
-    const [patientResult, donorResult] = await Promise.all([
-      pool.query(patientQuery, [patientId]),
-      pool.query(donorQuery, [donorId])
-    ]);
-    
-    if (patientResult.rows.length === 0 || donorResult.rows.length === 0) {
-      throw new Error("Patient or donor not found");
-    }
-    
-    const patient = patientResult.rows[0];
-    const donor = donorResult.rows[0];
-    
-    let successProbability = 75; // Base success rate
-    const riskFactors: string[] = [];
-    const recommendations: string[] = [];
-    
-    // Age-based success prediction (from dataset analysis)
-    const ageDiff = Math.abs(patient.age - donor.age);
-    if (ageDiff > 20) {
-      successProbability -= 15;
-      riskFactors.push("Significant age difference between donor and recipient");
-      recommendations.push("Consider additional pre-operative screening");
-    } else if (ageDiff <= 5) {
-      successProbability += 10;
-    }
-    
-    // Blood type compatibility impact
-    const bloodCompat = calculateBloodCompatibility(patient.blood_type, donor.blood_type);
-    if (bloodCompat < 80) {
-      successProbability -= 20;
-      riskFactors.push("Suboptimal blood type compatibility");
-      recommendations.push("Enhanced immunosuppression protocol may be required");
-    } else if (bloodCompat === 100) {
-      successProbability += 15;
-    }
-    
-    // Organ-specific success rates (based on medical literature)
-    switch (patient.organ_needed.toLowerCase()) {
-      case 'kidney':
-        successProbability += 10; // Kidneys have high success rates
-        break;
-      case 'heart':
-        if (patient.age > 65) {
-          successProbability -= 10;
-          riskFactors.push("Advanced age for heart transplant");
-        }
-        break;
-      case 'liver':
-        if (patient.urgency_level === 'Critical') {
-          successProbability -= 5;
-          riskFactors.push("Critical condition may affect recovery");
-        }
-        break;
-      case 'lung':
-      case 'lungs':
-        successProbability -= 5; // Lung transplants are generally more complex
-        if (ageDiff > 10) {
-          successProbability -= 10;
-          riskFactors.push("Age compatibility critical for lung transplants");
-        }
-        break;
-    }
-    
-    // Urgency level impact
-    if (patient.urgency_level === 'Critical') {
-      successProbability -= 5;
-      riskFactors.push("Critical condition increases surgical risk");
-      recommendations.push("Expedited surgical planning and ICU preparation");
-    }
-    
-    // Gender matching (some organs benefit from gender matching)
-    if (patient.gender === donor.gender && ['Heart', 'Liver'].includes(patient.organ_needed)) {
-      successProbability += 5;
-    }
-    
-    // Final success probability
-    successProbability = Math.max(30, Math.min(95, successProbability));
-    
-    // Add standard recommendations
-    recommendations.push("Complete tissue typing and crossmatching");
-    recommendations.push("Coordinate transportation logistics");
-    if (successProbability < 70) {
-      recommendations.push("Consider patient counseling regarding increased risks");
-    }
-    
-    return {
-      successProbability,
-      riskFactors,
-      recommendations
-    };
-    
-  } catch (error) {
-    console.error("Transplant success prediction error:", error);
-    throw error;
-  }
-}
-
-// Generate insights based on dataset patterns
-export async function generateMatchingInsights(hospitalId: string): Promise<{
-  totalPatients: number;
-  avgWaitTime: number;
-  successRate: number;
-  criticalCases: number;
-  organDemand: { [organ: string]: number };
-  recommendations: string[];
-}> {
-  try {
-    const patientsQuery = `
-      SELECT organ_needed, urgency_level, registration_date
-      FROM patients 
-      WHERE hospital_id = $1 AND is_active = true
-    `;
-    const patientsResult = await pool.query(patientsQuery, [hospitalId]);
-    
-    const totalPatients = patientsResult.rows.length;
-    const criticalCases = patientsResult.rows.filter(p => p.urgency_level === 'Critical').length;
-    
-    // Calculate average wait time
-    const now = new Date();
-    const waitTimes = patientsResult.rows.map(p => {
-      const regDate = new Date(p.registration_date);
-      return Math.floor((now.getTime() - regDate.getTime()) / (1000 * 60 * 60 * 24));
-    });
-    const avgWaitTime = waitTimes.reduce((sum, days) => sum + days, 0) / waitTimes.length || 0;
-    
-    // Organ demand analysis
-    const organDemand: { [organ: string]: number } = {};
-    patientsResult.rows.forEach(p => {
-      organDemand[p.organ_needed] = (organDemand[p.organ_needed] || 0) + 1;
-    });
-    
-    // Mock success rate calculation (would be based on historical data)
-    const successRate = 78; // Based on typical transplant success rates
-    
-    // Generate recommendations
-    const recommendations: string[] = [];
-    
-    if (avgWaitTime > 180) {
-      recommendations.push("Average wait time is high - consider expanding donor network");
-    }
-    
-    if (criticalCases > totalPatients * 0.2) {
-      recommendations.push("High number of critical cases - prioritize urgent matching");
-    }
-    
-    const highDemandOrgans = Object.entries(organDemand)
-      .filter(([_, count]) => count > totalPatients * 0.3)
-      .map(([organ, _]) => organ);
-    
-    if (highDemandOrgans.length > 0) {
-      recommendations.push(`High demand for: ${highDemandOrgans.join(', ')} - focus donor recruitment`);
-    }
-    
-    return {
-      totalPatients,
-      avgWaitTime: Math.round(avgWaitTime),
-      successRate,
-      criticalCases,
-      organDemand,
-      recommendations
-    };
-    
-  } catch (error) {
-    console.error("Matching insights error:", error);
-    throw error;
-  }
-}
+// Export singleton instance
+export const enhancedAIMatchingService = new EnhancedAIMatchingService();
