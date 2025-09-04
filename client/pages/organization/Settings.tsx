@@ -180,6 +180,89 @@ export default function OrganizationSettings() {
     setHasChanges(true);
   };
 
+  const handleExportData = async (options: ExportOptions) => {
+    try {
+      await submitExportRequest({
+        requesterId: "org_1", // Get from auth context
+        requesterName: "World Health Organization",
+        requesterType: "organization",
+        dataType: "organization_settings",
+        format: options.format,
+        includesPersonalData: options.includePersonalData || false,
+      });
+
+      addNotification({
+        type: "success",
+        title: "Export Request Submitted",
+        message: `Your settings export request (${options.format.toUpperCase()}) has been submitted for admin approval.`,
+        read: false,
+        urgent: false,
+        category: "export",
+        recipientType: "organization",
+      });
+    } catch (error) {
+      console.error("Export request failed:", error);
+      addNotification({
+        type: "error",
+        title: "Export Request Failed",
+        message: "Failed to submit export request. Please try again.",
+        read: false,
+        urgent: true,
+        category: "export",
+        recipientType: "organization",
+      });
+    }
+  };
+
+  const handlePasswordChangeRequest = async () => {
+    try {
+      if (!passwordChangeReason.trim()) {
+        addNotification({
+          type: "warning",
+          title: "Reason Required",
+          message: "Please provide a reason for the password change request.",
+          read: false,
+          urgent: false,
+          category: "security",
+          recipientType: "organization",
+        });
+        return;
+      }
+
+      await submitPasswordChangeRequest({
+        userId: "org_1", // Get from auth context
+        userType: "organization",
+        userName: "World Health Organization",
+        userEmail: "who@organlink.org",
+        reason: passwordChangeReason,
+      });
+
+      addNotification({
+        type: "success",
+        title: "Password Change Request Submitted",
+        message: "Your password change request has been submitted for admin approval.",
+        read: false,
+        urgent: false,
+        category: "security",
+        recipientType: "organization",
+      });
+
+      setPasswordChangeModalOpen(false);
+      setPasswordChangeReason("");
+    } catch (error) {
+      console.error("Password change request failed:", error);
+      addNotification({
+        type: "error",
+        title: "Request Failed",
+        message: "Failed to submit password change request. Please try again.",
+        read: false,
+        urgent: true,
+        category: "security",
+        recipientType: "organization",
+      });
+    }
+  };
+
   const tabs = [
     { id: "general", label: "General", icon: Settings },
     { id: "notifications", label: "Notifications", icon: Bell },
