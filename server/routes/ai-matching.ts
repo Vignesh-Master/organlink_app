@@ -6,15 +6,15 @@ import {
   Donor,
 } from "../services/enhancedAiMatching.js";
 import { blockchainService } from "../services/blockchain.js";
-import pool from "../config/database.js";
+import { pool } from "../config/database.js";
 
 const router = express.Router();
 
 // Validation schemas
 const PatientSchema = z.object({
-  id: z.string(),
-  organ_type: z.string(),
-  blood_group: z.string(),
+  id: z.string().min(1, "Patient ID is required"),
+  organ_type: z.string().min(1, "Organ type is required"),
+  blood_group: z.string().min(1, "Blood group is required"),
   age: z.number().optional(),
   weight: z.number().optional(),
   height: z.number().optional(),
@@ -42,9 +42,9 @@ const PatientSchema = z.object({
 });
 
 const DonorSchema = z.object({
-  id: z.string(),
-  organ_type: z.string(),
-  blood_group: z.string(),
+  id: z.string().min(1, "Donor ID is required"),
+  organ_type: z.string().min(1, "Organ type is required"),
+  blood_group: z.string().min(1, "Blood group is required"),
   age: z.number().optional(),
   weight: z.number().optional(),
   height: z.number().optional(),
@@ -144,9 +144,9 @@ async function getEligibleDonors(
     const result = await pool.query(query, params);
 
     return result.rows.map((row) => ({
-      id: row.id,
-      organ_type: row.organ_type,
-      blood_group: row.blood_group,
+      id: row.id || "",
+      organ_type: row.organ_type || "",
+      blood_group: row.blood_group || "",
       age: row.age,
       weight: row.weight,
       height: row.height,
@@ -167,7 +167,7 @@ async function getEligibleDonors(
       ocr_verified: row.ocr_verified,
       ocr_score_bps: row.ocr_score_bps,
       blockchain_verified: row.blockchain_verified,
-    }));
+    } as Donor));
   } catch (error) {
     console.error("Error fetching eligible donors:", error);
     return [];
@@ -187,13 +187,28 @@ async function enhanceWithBlockchainData(
         blockchainRecord.docHash !==
           "0x0000000000000000000000000000000000000000000000000000000000000000"
       ) {
-        return {
-          ...data,
+        const enhanced: Patient | Donor = {
+          id: data.id,
+          organ_type: data.organ_type,
+          blood_group: data.blood_group,
+          age: data.age,
+          weight: data.weight,
+          height: data.height,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          urgency: 'urgency' in data ? data.urgency : undefined,
+          waitlist_days: 'waitlist_days' in data ? data.waitlist_days : undefined,
+          medical_urgency: 'medical_urgency' in data ? data.medical_urgency : undefined,
+          HLA: data.HLA,
+          hospital_id: data.hospital_id,
+          doc_hash: data.doc_hash,
+          ipfs_cid: blockchainRecord.ipfsCid,
           ocr_verified: blockchainRecord.ocrVerified,
           ocr_score_bps: Number(blockchainRecord.ocrScoreBps),
           blockchain_verified: true,
-          ipfs_cid: blockchainRecord.ipfsCid,
         };
+        return enhanced;
       }
     } catch (error) {
       console.warn("Could not verify blockchain data:", error);
@@ -215,9 +230,7 @@ router.post("/find-matches", async (req, res) => {
     } = validatedData;
 
     // Enhance patient data with blockchain verification
-    const enhancedPatient = (await enhanceWithBlockchainData(
-      patient,
-    )) as Patient;
+    const enhancedPatient = await enhanceWithBlockchainData(patient) as Patient;
 
     // Get donors (either provided or from database)
     let donorCandidates: Donor[];
@@ -225,9 +238,7 @@ router.post("/find-matches", async (req, res) => {
     if (providedDonors && providedDonors.length > 0) {
       // Use provided donors
       donorCandidates = await Promise.all(
-        providedDonors.map(
-          (donor) => enhanceWithBlockchainData(donor) as Promise<Donor>,
-        ),
+        providedDonors.map(async (donor) => await enhanceWithBlockchainData(donor) as Donor)
       );
     } else {
       // Fetch from database
@@ -238,9 +249,7 @@ router.post("/find-matches", async (req, res) => {
 
       // Enhance with blockchain data
       donorCandidates = await Promise.all(
-        donorCandidates.map(
-          (donor) => enhanceWithBlockchainData(donor) as Promise<Donor>,
-        ),
+        donorCandidates.map(async (donor) => await enhanceWithBlockchainData(donor) as Donor)
       );
     }
 
@@ -450,12 +459,8 @@ router.post("/check-compatibility", async (req, res) => {
     const validatedDonor = DonorSchema.parse(donor);
 
     // Enhance with blockchain data
-    const enhancedPatient = (await enhanceWithBlockchainData(
-      validatedPatient,
-    )) as Patient;
-    const enhancedDonor = (await enhanceWithBlockchainData(
-      validatedDonor,
-    )) as Donor;
+    const enhancedPatient = await enhanceWithBlockchainData(validatedPatient) as Patient;
+    const enhancedDonor = await enhanceWithBlockchainData(validatedDonor) as Donor;
 
     // Single donor matching
     const matchResult = await enhancedAIMatchingService.matchPatientToDonors(

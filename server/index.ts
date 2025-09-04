@@ -4,6 +4,8 @@ import cors from "cors";
 import helmet from "helmet";
 import csrf from "csurf";
 import cookieParser from "cookie-parser";
+import { createServer as createHttpServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import {
   initializeDatabase,
   checkDatabaseConnection,
@@ -42,8 +44,24 @@ import {
   adminPasswordChangeRequestsRouter,
 } from "./routes/password-change-requests";
 
-export function createServer() {
+export async function createServer() {
   const app = express();
+
+  // Create HTTP server
+  const server = createHttpServer(app);
+
+  // Initialize Socket.IO
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: process.env.CORS_ORIGIN || "*",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+  });
+
+  // Initialize Socket Service
+  const { initializeSocketService } = await import("./services/socketService.js");
+  initializeSocketService(io);
 
   // Middleware
   const corsOrigin = process.env.CORS_ORIGIN || "*";
@@ -114,7 +132,7 @@ export function createServer() {
   app.use("/api/test/blockchain", testBlockchainRoutes);
   app.use("/api/test/ipfs", testIpfsRoutes);
 
-  return app;
+  return { app, server };
 }
 
 // Initialize database on server startup

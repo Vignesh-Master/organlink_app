@@ -1,6 +1,6 @@
 import express from "express";
 import { z } from "zod";
-import pool from "../config/database.js";
+import { pool } from "../config/database.js";
 import { generateId } from "../utils/crypto.js";
 
 const router = express.Router();

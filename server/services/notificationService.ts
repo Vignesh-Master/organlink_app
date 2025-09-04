@@ -6,6 +6,7 @@ const pool = new Pool({
 
 interface NotificationData {
   hospital_id: string;
+  recipient_type: string;
   type: string;
   title: string;
   message: string;
@@ -18,11 +19,12 @@ export class NotificationService {
       const notificationId = `NOTIF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       await pool.query(
-        `INSERT INTO notifications (notification_id, hospital_id, type, title, message, related_id, created_at, updated_at, read)
-         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false)`,
+        `INSERT INTO notifications (notification_id, hospital_id, recipient_type, type, title, message, related_id, created_at, updated_at, read)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false)`,
         [
           notificationId,
           data.hospital_id,
+          data.recipient_type,
           data.type,
           data.title,
           data.message,
@@ -62,6 +64,7 @@ export class NotificationService {
       // Notify donor hospital about match request
       await this.createNotification({
         hospital_id: donorHospitalId,
+        recipient_type: "hospital",
         type: "organ_match",
         title: "New Organ Match Request",
         message: `${hospitals[patientHospitalId]} has requested a ${organType} for patient ${patientId}. Please review and respond.`,
@@ -82,6 +85,7 @@ export class NotificationService {
     try {
       await this.createNotification({
         hospital_id: hospitalId,
+        recipient_type: "hospital",
         type: "urgent_case",
         title: "Critical Patient Alert",
         message: `Patient ${patientName} (ID: ${patientId}) condition has been upgraded to critical. Immediate attention required.`,
@@ -112,6 +116,7 @@ export class NotificationService {
 
       await this.createNotification({
         hospital_id: hospitalId,
+        recipient_type: "hospital",
         type: "match_response",
         title,
         message,
@@ -132,6 +137,7 @@ export class NotificationService {
     try {
       await this.createNotification({
         hospital_id: hospitalId,
+        recipient_type: "hospital",
         type: "system",
         title,
         message,
@@ -155,6 +161,7 @@ export class NotificationService {
       for (const hospital of hospitalResult.rows) {
         await this.createNotification({
           hospital_id: hospital.hospital_id,
+          recipient_type: "hospital",
           type,
           title,
           message,
@@ -205,6 +212,7 @@ export class NotificationService {
 
           await this.createNotification({
             hospital_id: hospital.hospital_id,
+            recipient_type: "hospital",
             ...randomMessage,
           });
         }

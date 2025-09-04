@@ -1,6 +1,6 @@
 import express from "express";
 import { z } from "zod";
-import pool from "../config/database.js";
+import { pool } from "../config/database.js";
 import { generateId, generateSalt, hashWithSalt } from "../utils/crypto.js";
 import bcrypt from "bcryptjs";
 

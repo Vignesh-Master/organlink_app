@@ -160,9 +160,9 @@ router.post("/", authenticateHospital, async (req, res) => {
     const notificationId = `NOTIF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     await pool.query(
-      `INSERT INTO notifications (notification_id, hospital_id, type, title, message, related_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [notificationId, hospital_id, type, title, message, related_id || null],
+      `INSERT INTO notifications (notification_id, hospital_id, recipient_type, type, title, message, related_id, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [notificationId, hospital_id, "hospital", type, title, message, related_id || null],
     );
 
     res.json({
@@ -219,11 +219,12 @@ router.post("/test", authenticateHospital, async (req, res) => {
       const notificationId = `TEST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       await pool.query(
-        `INSERT INTO notifications (notification_id, hospital_id, type, title, message, related_id, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        `INSERT INTO notifications (notification_id, hospital_id, recipient_type, type, title, message, related_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
         [
           notificationId,
           hospitalId,
+          "hospital",
           notification.type,
           notification.title,
           notification.message,

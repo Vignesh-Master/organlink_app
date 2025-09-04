@@ -276,12 +276,13 @@ export class AIMatchingService {
 
         await pool.query(
           `INSERT INTO notifications (
-            notification_id, hospital_id, type, title, message,
+            notification_id, hospital_id, recipient_type, type, title, message,
             related_id, metadata, read
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
           [
             notificationId,
             hospitalId,
+            "hospital",
             "organ_match",
             "Organ Match Found",
             `Your hospital has ${matches.length} potential donor(s) for a patient in need. Please review the matching request.`,
