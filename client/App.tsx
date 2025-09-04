@@ -48,6 +48,7 @@ import { HospitalAuthProvider } from "./contexts/HospitalAuthContext";
 import { HospitalNotificationProvider } from "./contexts/HospitalNotificationContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { SystemNotificationProvider } from "./contexts/SystemNotificationContext";
 
 const queryClient = new QueryClient();
 
