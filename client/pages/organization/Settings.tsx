@@ -689,9 +689,12 @@ export default function OrganizationSettings() {
                         onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       />
                     </div>
-                    <Button className="w-full md:w-auto">
+                    <Button
+                      className="w-full md:w-auto"
+                      onClick={() => setPasswordChangeModalOpen(true)}
+                    >
                       <Key className="h-4 w-4 mr-2" />
-                      Update Password
+                      Request Password Change
                     </Button>
                   </CardContent>
                 </Card>
