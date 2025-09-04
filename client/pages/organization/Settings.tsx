@@ -37,6 +37,7 @@ import {
   Upload,
   Trash2,
   RefreshCw,
+  Info,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
