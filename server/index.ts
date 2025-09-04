@@ -84,6 +84,10 @@ export function createServer() {
   app.use("/api/hospital/notifications", hospitalNotificationsRoutes);
   app.use("/api/hospital/cleanup", hospitalCleanupRoutes);
 
+  // Blockchain integration routes
+  app.use("/api/blockchain/attestation", signatureAttestationRoutes);
+  app.use("/api/blockchain/governance", policyGovernanceRoutes);
+
   // Test routes for development
   app.use("/api/test/blockchain", testBlockchainRoutes);
   app.use("/api/test/ipfs", testIpfsRoutes);
