@@ -22,6 +22,7 @@ import OrganizationAnalytics from "./pages/organization/Analytics";
 import OrganizationProfile from "./pages/organization/Profile";
 import OrganizationSettings from "./pages/organization/Settings";
 import OrganizationHelp from "./pages/organization/Help";
+import OrganizationHistory from "./pages/organization/History";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ManageHospitals from "./pages/admin/ManageHospitals";
