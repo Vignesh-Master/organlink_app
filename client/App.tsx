@@ -118,6 +118,22 @@ const App = () => (
                       path="/organization/policies/vote"
                       element={<VotePolicy />}
                     />
+                    <Route
+                      path="/organization/analytics"
+                      element={<OrganizationAnalytics />}
+                    />
+                    <Route
+                      path="/organization/profile"
+                      element={<OrganizationProfile />}
+                    />
+                    <Route
+                      path="/organization/settings"
+                      element={<OrganizationSettings />}
+                    />
+                    <Route
+                      path="/organization/help"
+                      element={<OrganizationHelp />}
+                    />
 
                     {/* Admin Routes */}
                     <Route
